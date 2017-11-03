@@ -17,5 +17,5 @@ Library for reading and unpacking Chrome extension `.crx` files.
 
 ## Credits
 
-The example extension file in the test resources is from
-https://developer.chrome.com/extensions/samples.
+The extension ID construction is probably from [this Stack Overflow answer](https://stackoverflow.com/a/2050916/2657036). 
+The example extension file in the test resources is from [developer.chrome.com](https://developer.chrome.com/extensions/samples).
