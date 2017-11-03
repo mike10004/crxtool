@@ -1,3 +1,6 @@
+[![Travis build status](https://img.shields.io/travis/mike10004/crxtool.svg)](https://travis-ci.org/mike10004/crxtool)
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.mike10004/crxtool.svg)](https://repo1.maven.org/maven2/com/github/mike10004/crxtool/)
+
 # crxtool
 
 Library for reading and unpacking Chrome extension `.crx` files.
@@ -16,4 +19,3 @@ Library for reading and unpacking Chrome extension `.crx` files.
 
 The example extension file in the test resources is from
 https://developer.chrome.com/extensions/samples.
-
