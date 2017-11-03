@@ -29,7 +29,7 @@ public class BasicCrxParserTest {
             metadata = parser.parseMetadata(in);
             report = new Unzipper().unzip(in, temporaryFolder.newFolder().toPath());
         }
-        System.out.format("id=%s%npubkey=%s%nsignature=%s%n", metadata.id, metadata.pubkeyBase64, metadata.signatureBase64);
+        System.out.format("headerLength=%s%nid=%s%npubkey=%s%nsignature=%s%n", metadata.headerLength(), metadata.id, metadata.pubkeyBase64, metadata.signatureBase64);
         assertEquals("id", "dolgciijajlmajahhgogoajoacjidnhi", metadata.id);
         report.unzippedEntries.forEach(entry -> {
             System.out.format("%s -> %s%n", entry.name, entry.file);

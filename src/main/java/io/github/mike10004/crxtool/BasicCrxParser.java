@@ -14,6 +14,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 
+/**
+ * Basic implementation of a Chrome extension parser.
+ */
 public class BasicCrxParser implements CrxParser {
 
     @Override
@@ -46,7 +49,7 @@ public class BasicCrxParser implements CrxParser {
     private static final char[] CRX_ID_CHARS = "abcdefghijklmnop".toCharArray();
 
     @SuppressWarnings("SameParameterValue")
-    protected void translate(char[] from, char[] to, String source, int sourceStart, int sourceLen, StringBuilder sink) throws IOException {
+    private static void translate(char[] from, char[] to, String source, int sourceStart, int sourceLen, StringBuilder sink) throws IOException {
         if (from.length != to.length) {
             throw new IllegalArgumentException("arrays must be congruent");
         }
