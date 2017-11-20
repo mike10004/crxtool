@@ -19,4 +19,7 @@ public interface CrxParser {
      */
     CrxMetadata parseMetadata(InputStream crxInputStream) throws IOException;
 
+    static CrxParser getDefault() {
+        return BasicCrxParser.getDefaultInstance();
+    }
 }

@@ -1,7 +1,5 @@
 package io.github.mike10004.crxtool;
 
-import com.google.common.io.ByteSource;
-
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -19,25 +17,40 @@ import static java.util.Objects.requireNonNull;
  */
 public final class CrxMetadata {
 
-    public final String magicNumber;
-    public final int version;
-    public final int pubkeyLength;
     /**
-     * Developer public key in base-64 encoding
+     * Extension ID, as computed from the public key.
+     */
+    public final String id;
+
+    /**
+     * Magic number of the file type.
+     */
+    public final String magicNumber;
+
+    /**
+     * Version of the CRX file format used.
+     */
+    public final int version;
+
+    /**
+     * Length of the developer RSA public key in bytes.
+     */
+    public final int pubkeyLength;
+
+    /**
+     * Developer RSA public key in base-64 encoding.
      */
     public final String pubkeyBase64;
 
+    /**
+     * Length of the zip content signature in bytes.
+     */
     public final int signatureLength;
 
     /**
      * ZIP content signature using the developer's private key.
      */
     public final String signatureBase64;
-
-    /**
-     * Extension ID, as computed from the public key.
-     */
-    public final String id;
 
     CrxMetadata(String magicNumber, int version, int pubkeyLength, String pubkeyBase64, int signatureLength, String signatureBase64, String id) {
         this.magicNumber = requireNonNull(magicNumber);
@@ -58,4 +71,45 @@ public final class CrxMetadata {
         return 4 * 4 + pubkeyLength + signatureLength;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        CrxMetadata that = (CrxMetadata) o;
+
+        if (version != that.version) return false;
+        if (pubkeyLength != that.pubkeyLength) return false;
+        if (signatureLength != that.signatureLength) return false;
+        if (magicNumber != null ? !magicNumber.equals(that.magicNumber) : that.magicNumber != null) return false;
+        if (pubkeyBase64 != null ? !pubkeyBase64.equals(that.pubkeyBase64) : that.pubkeyBase64 != null) return false;
+        if (signatureBase64 != null ? !signatureBase64.equals(that.signatureBase64) : that.signatureBase64 != null)
+            return false;
+        return id != null ? id.equals(that.id) : that.id == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = magicNumber != null ? magicNumber.hashCode() : 0;
+        result = 31 * result + version;
+        result = 31 * result + pubkeyLength;
+        result = 31 * result + (pubkeyBase64 != null ? pubkeyBase64.hashCode() : 0);
+        result = 31 * result + signatureLength;
+        result = 31 * result + (signatureBase64 != null ? signatureBase64.hashCode() : 0);
+        result = 31 * result + (id != null ? id.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "CrxMetadata{" +
+                "id='" + id + '\'' +
+                ", magicNumber='" + magicNumber + '\'' +
+                ", version=" + version +
+                ", pubkeyLength=" + pubkeyLength +
+                ", pubkeyBase64='" + CommonsLang3StringUtils.abbreviate(pubkeyBase64, 16) + '\'' +
+                ", signatureLength=" + signatureLength +
+                ", signatureBase64='" + CommonsLang3StringUtils.abbreviate(signatureBase64, 16) + '\'' +
+                '}';
+    }
 }

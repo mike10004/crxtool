@@ -19,6 +19,13 @@ import java.util.Locale;
  */
 public class BasicCrxParser implements CrxParser {
 
+    private static final BasicCrxParser DEFAULT_INSTANCE = new BasicCrxParser();
+    private static final int ID_LEN = 32;
+    private static final char[] DIGEST_CHARS = "0123456789abcdef".toCharArray();
+    private static final char[] CRX_ID_CHARS = "abcdefghijklmnop".toCharArray();
+
+    public BasicCrxParser() {}
+
     @Override
     public CrxMetadata parseMetadata(InputStream crxInput) throws IOException {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
@@ -43,11 +50,6 @@ public class BasicCrxParser implements CrxParser {
         return new CrxMetadata(magicNumber, version, pubkeyLength, pubkeyBase64, signatureLength, signatureBase64, id);
     }
 
-    private static final int ID_LEN = 32;
-
-    private static final char[] DIGEST_CHARS = "0123456789abcdef".toCharArray();
-    private static final char[] CRX_ID_CHARS = "abcdefghijklmnop".toCharArray();
-
     @SuppressWarnings("SameParameterValue")
     private static void translate(char[] from, char[] to, String source, int sourceStart, int sourceLen, StringBuilder sink) throws IOException {
         if (from.length != to.length) {
@@ -64,4 +66,7 @@ public class BasicCrxParser implements CrxParser {
         }
     }
 
+    static BasicCrxParser getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+    }
 }
