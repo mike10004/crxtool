@@ -18,8 +18,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CharsetDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.KeyPair;
@@ -63,7 +61,7 @@ public class BasicCrxPackerTest {
         Path extensionDir = Tests.getAddFooterExtensionDir();
         File crxFile = File.createTempFile("BasicCrxPackerTest", ".crx", temporaryFolder.getRoot());
         try (OutputStream output = new FileOutputStream(crxFile)) {
-            new BasicCrxPacker().packExtension(extensionDir, KeyPairs.generateKeyPair(getClass().hashCode()), output);
+            new BasicCrxPacker().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
         }
         String magic = readMagicNumber(crxFile, 4);
         checkState("Cr24".equals(magic), "magic number incorrect: %s", magic);
@@ -85,7 +83,7 @@ public class BasicCrxPackerTest {
         Path extensionDir = Tests.getAddFooterExtensionDir();
         File crxFile = File.createTempFile("BasicCrxPackerTest", ".crx");
         try (OutputStream output = new FileOutputStream(crxFile)) {
-            new BasicCrxPacker().packExtension(extensionDir, KeyPairs.generateKeyPair(getClass().hashCode()), output);
+            new BasicCrxPacker().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
         }
         String magic = readMagicNumber(crxFile, 4);
         checkState("Cr24".equals(magic), "magic number incorrect: %s", magic);

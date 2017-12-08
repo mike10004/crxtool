@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
+import com.google.common.primitives.Longs;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -17,8 +18,11 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -177,7 +181,7 @@ public class Tests {
         // we just need to gather the names of files only in the query directory
         java.nio.file.Files.walkFileTree(query, new DiffingVisitor(query, reference) {
             @Override
-            protected void visitDirectory(Path referenceDir, Path queryDir) throws IOException {
+            protected void visitDirectory(Path referenceDir, Path queryDir) {
                 checkExists(relativize(query, referenceDir), queryDir.toFile());
             }
 
@@ -192,11 +196,20 @@ public class Tests {
             }
 
             @Override
-            protected void visitFile(Path referenceFile, Path queryFile) throws IOException {
+            protected void visitFile(Path referenceFile, Path queryFile) {
                 checkExists(relativize(query, referenceFile), queryFile.toFile());
             }
         });
         return new DirDiff(referenceOnly, queryOnly, differents);
+    }
+
+    // https://stackoverflow.com/a/24689684/2657036
+    public static KeyPair generateRsaKeyPair(long seed) throws NoSuchAlgorithmException {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        byte[] seedBytes = Longs.toByteArray(seed);
+        SecureRandom random = new SecureRandom(seedBytes);
+        keyGen.initialize(1024, random);
+        return keyGen.generateKeyPair();
     }
 
 }

@@ -40,12 +40,4 @@ public class KeyPairs {
         return publicKey;
     }
 
-    public static KeyPair generateKeyPair(long seed) throws NoSuchAlgorithmException {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-        byte[] seedBytes = Longs.toByteArray(seed);
-        SecureRandom random = new SecureRandom(seedBytes);
-        keyGen.initialize(1024, random);
-        return keyGen.generateKeyPair();
-    }
-
 }
