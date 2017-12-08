@@ -22,6 +22,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.Random;
+import java.util.zip.ZipFile;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
@@ -60,8 +61,9 @@ public class BasicCrxPackerTest {
     public void packExtensionFromDirCreatesValidMetadata() throws Exception {
         Path extensionDir = Tests.getAddFooterExtensionDir();
         File crxFile = File.createTempFile("BasicCrxPackerTest", ".crx", temporaryFolder.getRoot());
+        ZipConfig zipConfig = new ZipConfig(null, null, "This is my comment");
         try (OutputStream output = new FileOutputStream(crxFile)) {
-            new BasicCrxPacker().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
+            new BasicCrxPacker().packExtension(extensionDir, zipConfig, Tests.generateRsaKeyPair(getClass().hashCode()), output);
         }
         String magic = readMagicNumber(crxFile, 4);
         checkState("Cr24".equals(magic), "magic number incorrect: %s", magic);
@@ -70,6 +72,12 @@ public class BasicCrxPackerTest {
             metadata = CrxParser.getDefault().parseMetadata(in);
         }
         System.out.format("metadata: %s%n", metadata);
+        File zipFile = Tests.chopZipFromCrx(crxFile);
+        String actualComment;
+        try (ZipFile zf = new ZipFile(zipFile)) {
+            actualComment = zf.getComment();
+        }
+        assertEquals("zip comment", zipConfig.comment, actualComment);
     }
 
     private static String readMagicNumber(File file, int length) throws IOException {
