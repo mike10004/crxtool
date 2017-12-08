@@ -5,6 +5,14 @@
 
 Library for packing and unpacking Chrome extension `.crx` files.
 
+## Maven
+
+    <dependency>
+        <groupId>com.github.mike10004</groupId>
+        <artifactId>crxtool</artifactId>
+        <version>0.3</version>
+    </dependency>
+
 ## Usage
 
 ### Unpacking
