@@ -1,13 +1,15 @@
 package io.github.mike10004.crxtool;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Longs;
 
-import java.io.IOException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -36,6 +38,14 @@ public class KeyPairs {
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
         return publicKey;
+    }
+
+    public static KeyPair generateKeyPair(long seed) throws NoSuchAlgorithmException {
+        KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+        byte[] seedBytes = Longs.toByteArray(seed);
+        SecureRandom random = new SecureRandom(seedBytes);
+        keyGen.initialize(1024, random);
+        return keyGen.generateKeyPair();
     }
 
 }

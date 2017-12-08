@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 
+import static com.google.common.base.Preconditions.checkState;
+
 /**
  * Basic implementation of a Chrome extension parser.
  */
@@ -26,6 +28,9 @@ public class BasicCrxParser implements CrxParser {
 
     public BasicCrxParser() {}
 
+    private static final int MAX_SANE_PUBKEY_LENGTH = 1024 * 32;
+    private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 64;
+
     @Override
     public CrxMetadata parseMetadata(InputStream crxInput) throws IOException {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
@@ -35,6 +40,8 @@ public class BasicCrxParser implements CrxParser {
         int version = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         int pubkeyLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         int signatureLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
+        checkState(pubkeyLength <= MAX_SANE_PUBKEY_LENGTH, "public key length is insane: %s", pubkeyLength);
+        checkState(signatureLength <= MAX_SANE_SIGNATURE_LENGTH, "signature length is insane: %s", signatureLength);
         byte[] pubkeyBytes = new byte[pubkeyLength];
         ByteStreams.readFully(crxInput, pubkeyBytes);
         byte[] signatureBytes = new byte[signatureLength];

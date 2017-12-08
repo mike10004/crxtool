@@ -12,6 +12,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.SignatureException;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 public class BasicCrxPacker implements CrxPacker {
 
     private static final String MAGIC_NUMBER = "Cr24";
@@ -24,17 +26,40 @@ public class BasicCrxPacker implements CrxPacker {
 
     @Override
     public void packExtension(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
+        writeExtensionHeader(zipBytes, keyPair, output);
+        zipBytes.copyTo(output);
+    }
+
+    protected static class HeaderPayloads {
+        public final byte[] publicKeyBytes;
+        public final byte[] signatureBytes;
+
+        public HeaderPayloads(byte[] publicKeyBytes, byte[] signatureBytes) {
+            this.publicKeyBytes = publicKeyBytes;
+            this.signatureBytes = signatureBytes;
+        }
+    }
+
+    protected void writeExtensionHeader(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+        byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
+        byte[] signature = sign(zipBytes, keyPair);
+        writeExtensionHeader(publicKeyBytes, signature, output);
+    }
+
+    private static final int MAX_SANE_PUBLIC_KEY_LENGTH = 1024 * 32;
+    private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 128;
+
+    protected void writeExtensionHeader(byte[] publicKeyBytes, byte[] signature, OutputStream output) throws IOException {
+        checkArgument(publicKeyBytes.length <= MAX_SANE_PUBLIC_KEY_LENGTH, "public key length is insane: %s", publicKeyBytes.length);
+        checkArgument(signature.length <= MAX_SANE_SIGNATURE_LENGTH, "signature length is insane: %s", signature.length);
         LittleEndianDataOutputStream leOutput = new LittleEndianDataOutputStream(output);
         writeMagicNumber(leOutput);
         writeFormatVersion(leOutput);
-        byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
         leOutput.writeInt(publicKeyBytes.length);
-        byte[] signature = sign(zipBytes, keyPair);
         leOutput.writeInt(signature.length);
         leOutput.flush();
         output.write(publicKeyBytes);
         output.write(signature);
-        zipBytes.copyTo(output);
     }
 
     protected void writeMagicNumber(LittleEndianDataOutputStream leOutput) throws IOException {

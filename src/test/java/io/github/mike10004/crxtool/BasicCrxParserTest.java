@@ -1,9 +1,7 @@
 package io.github.mike10004.crxtool;
 
-import com.google.common.io.Files;
+import com.google.common.io.ByteSource;
 import com.google.common.io.Resources;
-import io.github.mike10004.crxtool.Unzipper.UnzippedEntry;
-import io.github.mike10004.crxtool.Unzipper.ZipReport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -11,9 +9,10 @@ import org.junit.rules.TemporaryFolder;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class BasicCrxParserTest {
 
@@ -24,27 +23,24 @@ public class BasicCrxParserTest {
     public void parseMetadata() throws Exception {
         BasicCrxParser parser = new BasicCrxParser();
         CrxMetadata metadata;
-        ZipReport report;
-        try (InputStream in = getClass().getResourceAsStream("/make_page_red.crx")) {
+        Unzippage unzippage;
+        try (InputStream in = Tests.getMakePageRedCrxResource().openStream()) {
             metadata = parser.parseMetadata(in);
-            report = new Unzipper().unzip(in, temporaryFolder.newFolder().toPath());
+            unzippage = Unzippage.unzip(in);
         }
         System.out.format("headerLength=%s%nid=%s%npubkey=%s%nsignature=%s%n", metadata.headerLength(), metadata.id, metadata.pubkeyBase64, metadata.signatureBase64);
         assertEquals("id", "dnogaomdbgfngjgalaoggcfahgeibfdc", metadata.id);
-        report.unzippedEntries.forEach(entry -> {
-            System.out.format("%s -> %s%n", entry.name, entry.file);
+        unzippage.allEntries().forEach(entry -> {
+            System.out.format("%s%n", entry);
         });
         for (String filename : Arrays.asList("background.js", "manifest.json")) {
-            Optional<UnzippedEntry> entryOpt = report.unzippedEntries.stream().filter(entry -> filename.equals(entry.name)).findFirst();
-            assertTrue("not unzipped: " + filename, entryOpt.isPresent());
+            ByteSource entryBytes = unzippage.getFileBytes(filename);
+            assertNotNull("entry bytes present expected", entryBytes);
             URL reference = getClass().getResource("/make_page_red/" + filename);
-            byte[] actualBytes = Files.toByteArray(entryOpt.get().file);
+            byte[] actualBytes = entryBytes.read();
             byte[] expectedBytes = Resources.toByteArray(reference);
             assertArrayEquals("file bytes", expectedBytes, actualBytes);
         }
-        assertTrue("manifest.json", report.unzippedEntries.stream().anyMatch(entry -> "manifest.json".equals(entry.name)));
-        assertTrue("background.js", report.unzippedEntries.stream().anyMatch(entry -> "background.js".equals(entry.name)));
-
     }
 
 }

@@ -12,7 +12,7 @@ public class CrxMetadataTest {
     @Test
     public void testToString() throws Exception {
         CrxMetadata metadata;
-        try (InputStream in = getClass().getResourceAsStream("/make_page_red.crx")) {
+        try (InputStream in = Tests.getMakePageRedCrxResource().openStream()) {
             metadata = CrxParser.getDefault().parseMetadata(in);
         }
         System.out.println(metadata.toString());
