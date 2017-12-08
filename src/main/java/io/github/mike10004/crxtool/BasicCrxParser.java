@@ -29,9 +29,9 @@ public class BasicCrxParser implements CrxParser {
     @Override
     public CrxMetadata parseMetadata(InputStream crxInput) throws IOException {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
-        byte[] value0Bytes = new byte[4];
-        in.readFully(value0Bytes);
-        String magicNumber = new String(value0Bytes, StandardCharsets.US_ASCII);
+        byte[] magicNumberBytes = new byte[4];
+        in.readFully(magicNumberBytes);
+        String magicNumber = new String(magicNumberBytes, StandardCharsets.US_ASCII);
         int version = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         int pubkeyLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         int signatureLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
