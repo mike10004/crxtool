@@ -12,6 +12,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.interfaces.RSAPrivateCrtKey;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 
@@ -22,6 +23,13 @@ public class KeyPairs {
 
     private KeyPairs() {}
 
+    /**
+     * Loads an RSA key pair from a byte array that constitutes the private key.
+     * @param privateKeyBytes the private key bytes
+     * @return the key pair
+     * @throws NoSuchAlgorithmException if RSA is not supported
+     * @throws InvalidKeySpecException if thrown by {@link KeyFactory#generatePrivate(KeySpec)} on a {@link PKCS8EncodedKeySpec} instance
+     */
     public static KeyPair loadRsaKeyPairFromPrivateKeyBytes(byte[] privateKeyBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");

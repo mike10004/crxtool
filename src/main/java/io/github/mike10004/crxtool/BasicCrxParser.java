@@ -21,15 +21,18 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public class BasicCrxParser implements CrxParser {
 
+    private static final int MAX_SANE_PUBKEY_LENGTH = 1024 * 32;
+    private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 64;
+
     private static final BasicCrxParser DEFAULT_INSTANCE = new BasicCrxParser();
     private static final int ID_LEN = 32;
     private static final char[] DIGEST_CHARS = "0123456789abcdef".toCharArray();
     private static final char[] CRX_ID_CHARS = "abcdefghijklmnop".toCharArray();
 
+    /**
+     * Constructs an instance.
+     */
     public BasicCrxParser() {}
-
-    private static final int MAX_SANE_PUBKEY_LENGTH = 1024 * 32;
-    private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 64;
 
     @Override
     public CrxMetadata parseMetadata(InputStream crxInput) throws IOException {
@@ -58,7 +61,7 @@ public class BasicCrxParser implements CrxParser {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static void translate(char[] from, char[] to, String source, int sourceStart, int sourceLen, StringBuilder sink) throws IOException {
+    private static void translate(char[] from, char[] to, String source, int sourceStart, int sourceLen, StringBuilder sink) {
         if (from.length != to.length) {
             throw new IllegalArgumentException("arrays must be congruent");
         }

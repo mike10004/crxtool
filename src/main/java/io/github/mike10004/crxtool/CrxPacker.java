@@ -10,6 +10,8 @@ import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
 import java.security.SignatureException;
 import java.util.zip.ZipOutputStream;
 
@@ -18,11 +20,31 @@ import java.util.zip.ZipOutputStream;
  */
 public interface CrxPacker {
 
-
+    /**
+     * Packs an extension from a given directory and key pair.
+     * @param extensionDir the directory containing the extension files
+     * @param keyPair the key pair to sign with
+     * @param output the output stream
+     * @throws IOException if reading, writing, or zipping data fails
+     * @throws NoSuchAlgorithmException if RSA is not supported
+     * @throws InvalidKeyException if thrown by {@link java.security.Signature#initSign(PrivateKey)}
+     * @throws SignatureException if thrown by {@link java.security.Signature#update(byte[])} or {@link Signature#sign()}
+     */
     default void packExtension(Path extensionDir, KeyPair keyPair, OutputStream output) throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         packExtension(extensionDir, null, keyPair, output);
     }
 
+    /**
+     * Packs an extension from a given directory and key pair.
+     * @param extensionDir the directory containing the extension files
+     * @param keyPair the key pair to sign with
+     * @param zipConfig options for zipping
+     * @param output the output stream
+     * @throws IOException if reading, writing, or zipping data fails
+     * @throws NoSuchAlgorithmException if RSA is not supported
+     * @throws InvalidKeyException if thrown by {@link java.security.Signature#initSign(PrivateKey)}
+     * @throws SignatureException if thrown by {@link java.security.Signature#update(byte[])} or {@link Signature#sign()}
+     */
     default void packExtension(Path extensionDir, @Nullable ZipConfig zipConfig, KeyPair keyPair, OutputStream output) throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         ByteArrayOutputStream zipBuffer = new ByteArrayOutputStream(1024);
         try (ZipOutputStream zipOutputStream = new ZipOutputStream(zipBuffer)) {
@@ -48,6 +70,10 @@ public interface CrxPacker {
      * @param zipBytes byte source supplying zip data
      * @param keyPair key pair
      * @param output output stream
+     * @throws IOException if reading or writing data fails
+     * @throws NoSuchAlgorithmException if RSA is not supported
+     * @throws InvalidKeyException if thrown by {@link java.security.Signature#initSign(PrivateKey)}
+     * @throws SignatureException if thrown by {@link java.security.Signature#update(byte[])} or {@link Signature#sign()}
      * @see KeyPairs#loadRsaKeyPairFromPrivateKeyBytes(byte[])
      */
     void packExtension(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException;

@@ -4,21 +4,36 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * Value class that represents options for compressing data in ZIP format.
+ */
 public class ZipConfig {
 
+    /**
+     * The method, or null if the default method is to be used.
+     * @see ZipOutputStream#setMethod(int)
+     */
     @Nullable
     public final Integer method;
+
+    /**
+     * The compression level, or null if the default level is to be used.
+     * @see ZipOutputStream#setLevel(int)
+     */
     @Nullable
     public final Integer level;
     @Nullable
     public final String comment;
 
-    private static final ZipConfig DEFAULT_INSTANCE = new ZipConfig(null, null, null);
-
-    public static ZipConfig getDefault() {
-        return DEFAULT_INSTANCE;
-    }
-
+    /**
+     * Constructs an instance of the class.
+     * @param method the compression method
+     * @param level the compression
+     * @param comment a comment
+     * @see #method
+     * @see #level
+     * @see #comment
+     */
     public ZipConfig(@Nullable Integer method, @Nullable Integer level, @Nullable String comment) {
         this.method = method;
         this.level = level;
@@ -46,7 +61,6 @@ public class ZipConfig {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(method, level, comment);
     }
 }

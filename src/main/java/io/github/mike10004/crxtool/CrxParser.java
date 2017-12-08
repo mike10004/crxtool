@@ -16,6 +16,7 @@ public interface CrxParser {
      * of an extension file.
      * @param crxInputStream the input stream
      * @return the metadata
+     * @throws IOException if reading from the stream fails
      */
     CrxMetadata parseMetadata(InputStream crxInputStream) throws IOException;
 

@@ -14,13 +14,20 @@ import java.security.SignatureException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+/**
+ * Implementation that packs a Chrome extension.
+ */
 public class BasicCrxPacker implements CrxPacker {
 
+    private static final BasicCrxPacker DEFAULT_INSTANCE = new BasicCrxPacker();
     private static final String MAGIC_NUMBER = "Cr24";
     private static final int FORMAT_VERSION = 2;
+    private static final int MAX_SANE_PUBLIC_KEY_LENGTH = 1024 * 32;
+    private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 128;
 
-    private static final BasicCrxPacker DEFAULT_INSTANCE = new BasicCrxPacker();
-
+    /**
+     * Constructs a new instance.
+     */
     public BasicCrxPacker() {
     }
 
@@ -30,24 +37,11 @@ public class BasicCrxPacker implements CrxPacker {
         zipBytes.copyTo(output);
     }
 
-    protected static class HeaderPayloads {
-        public final byte[] publicKeyBytes;
-        public final byte[] signatureBytes;
-
-        public HeaderPayloads(byte[] publicKeyBytes, byte[] signatureBytes) {
-            this.publicKeyBytes = publicKeyBytes;
-            this.signatureBytes = signatureBytes;
-        }
-    }
-
     protected void writeExtensionHeader(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
         byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
         byte[] signature = sign(zipBytes, keyPair);
         writeExtensionHeader(publicKeyBytes, signature, output);
     }
-
-    private static final int MAX_SANE_PUBLIC_KEY_LENGTH = 1024 * 32;
-    private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 128;
 
     protected void writeExtensionHeader(byte[] publicKeyBytes, byte[] signature, OutputStream output) throws IOException {
         checkArgument(publicKeyBytes.length <= MAX_SANE_PUBLIC_KEY_LENGTH, "public key length is insane: %s", publicKeyBytes.length);
