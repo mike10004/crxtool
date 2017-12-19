@@ -7,11 +7,13 @@
     <groupId>com.github.mike10004</groupId>
     <artifactId>crxtool-parent</artifactId>
     <version>0.4-SNAPSHOT</version>
-    <name>crxtool-parent</name>
+    <name>crxtool</name>
     <description>Chrome extension tools</description>
     <packaging>pom</packaging>
     <modules>
-        <module>crxtool</module>
+        <module>crxtool-core</module>
+        <module>crxtool-maven-plugin</module>
+        <module>crxtool-testing</module>
     </modules>
     <url>https://github.com/mike10004/crxtool</url>
     <inceptionYear>2016</inceptionYear>
