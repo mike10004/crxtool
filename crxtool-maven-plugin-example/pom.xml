@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.github.mike10004</groupId>
         <artifactId>crxtool</artifactId>
-        <version>0.5-SNAPSHOT</version>
+        <version>0.5</version>
     </parent>
     <artifactId>crxtool-maven-plugin-example</artifactId>
     <packaging>pom</packaging>
