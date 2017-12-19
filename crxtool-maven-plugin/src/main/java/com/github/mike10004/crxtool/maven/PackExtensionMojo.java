@@ -3,13 +3,11 @@ package com.github.mike10004.crxtool.maven;
 import io.github.mike10004.crxtool.CrxPacker;
 import io.github.mike10004.crxtool.KeyPairs;
 import io.github.mike10004.crxtool.Zipping;
-import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,12 +33,6 @@ public class PackExtensionMojo extends AbstractMojo {
 
     public static final String PROP_PREFIX = "crxtool.";
 
-    @Parameter( defaultValue = "${session}", readonly = true )
-    private MavenSession session;
-
-    @Parameter( defaultValue = "${project}", readonly = true )
-    private MavenProject project;
-
     /**
      * Directory that contains extension source code and resource files. This
      * is the parent directory of {@code manifest.json}.
@@ -59,7 +51,7 @@ public class PackExtensionMojo extends AbstractMojo {
      * that is to be produced. If you set {@link #excludeHeader} to true, this
      * should be changed to a zip file.
      */
-    @Parameter(defaultValue = "${project.build.directory}/${project.name}.crx")
+    @Parameter(defaultValue = "${project.build.directory}/${project.artifactId}-${project.version}.crx")
     private File outputFile;
 
     /**
@@ -84,6 +76,7 @@ public class PackExtensionMojo extends AbstractMojo {
                 keyPair = KeyPairs.generateRsKeyPair(createRandom());
             }
             Path extensionDir = sourceDirectory.toPath();
+            com.google.common.io.Files.createParentDirs(outputFile);
             if (isExcludeHeader()) {
                 byte[] zipBytes = Zipping.zipDirectory(extensionDir, null);
                 java.nio.file.Files.write(outputFile.toPath(), zipBytes);
@@ -107,14 +100,6 @@ public class PackExtensionMojo extends AbstractMojo {
         return new SecureRandom();
     }
 
-    public MavenSession getSession() {
-        return session;
-    }
-
-    public MavenProject getProject() {
-        return project;
-    }
-
     public File getSourceDirectory() {
         return sourceDirectory;
     }
@@ -129,14 +114,6 @@ public class PackExtensionMojo extends AbstractMojo {
 
     public boolean isExcludeHeader() {
         return excludeHeader;
-    }
-
-    void setSession(MavenSession session) {
-        this.session = session;
-    }
-
-    void setProject(MavenProject project) {
-        this.project = project;
     }
 
     public void setSourceDirectory(File sourceDirectory) {

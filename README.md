@@ -5,17 +5,19 @@
 
 Library for packing and unpacking Chrome extension `.crx` files.
 
-## Maven
+## Core Library
+
+### Maven Dependency Info
 
     <dependency>
         <groupId>com.github.mike10004</groupId>
-        <artifactId>crxtool</artifactId>
-        <version>0.3</version>
+        <artifactId>crxtool-core</artifactId>
+        <version>0.5</version>
     </dependency>
 
-## Usage
+### Usage
 
-### Unpacking
+#### Unpacking
 
     try (InputStream in = new FileInputStream("my_extension.crx") {
         CrxMetadata metadata = CrxParser.getDefault().parseMetadata(in);
@@ -25,7 +27,7 @@ Library for packing and unpacking Chrome extension `.crx` files.
         // ...
     }
 
-### Packing
+#### Packing
 
     Path extensionDir = new File("manifest-parent-dir").toPath();
     java.security.KeyPairGenerator keyGen = java.security.KeyPairGenerator.getInstance("RSA");
@@ -35,6 +37,59 @@ Library for packing and unpacking Chrome extension `.crx` files.
     try (OutputStream out = new FileOutputStream("new_extension.crx")) {
         CrxPacker.getDefault().packExtension(extensionDir, keyPair, out);
     }
+
+## Maven Plugin
+
+### Maven Dependency Info
+
+    <dependency>
+        <groupId>com.github.mike10004</groupId>
+        <artifactId>crxtool-maven-plugin</artifactId>
+        <version>0.5</version>
+    </dependency>
+
+### Usage
+
+Place extension source files in `src/main/extension`.
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.mike10004</groupId>
+                <artifactId>crxtool-maven-plugin</artifactId>
+                <version>0.5</version>
+                <executions>
+                    <execution>
+                        <id>pack</id>
+                        <goals>
+                            <goal>pack-extension</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-artifact</id>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.build.directory}/${project.artifactId}-${project.version}.crx</file>
+                                    <type>crx</type>
+                                </artifact>
+                            </artifacts>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 ## Credits
 
