@@ -29,10 +29,6 @@ import java.security.spec.InvalidKeySpecException;
 
 /**
  * Goal that packs a Chrome extension.
- *
- * @goal pack-extension
- * 
- * @phase process-sources
  */
 @Mojo(name = "pack-extension", defaultPhase = LifecyclePhase.GENERATE_RESOURCES)
 public class PackExtensionMojo extends AbstractMojo {
