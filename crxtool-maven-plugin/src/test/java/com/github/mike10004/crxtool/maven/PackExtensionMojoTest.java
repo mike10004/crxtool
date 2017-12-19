@@ -1,5 +1,6 @@
 package com.github.mike10004.crxtool.maven;
 
+import com.github.mike10004.crxtool.maven.PackExtensionMojo.PrivateKeyParameterConflictException;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
@@ -17,6 +18,7 @@ import javax.annotation.Nullable;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -36,7 +38,7 @@ public class PackExtensionMojoTest {
 
     @Test
     public void testExecute_crx_noPrivateKey() throws Exception {
-        File crxFile = testExecute(false, null);
+        File crxFile = testExecute(false, null, false);
         checkMetadata(crxFile);
         checkZipDataInCrxFile(crxFile);
     }
@@ -44,22 +46,39 @@ public class PackExtensionMojoTest {
     @Test
     public void testExecute_crx_privateKey() throws Exception {
         File pemFile = buildPemFile(KeyPairs.generateRsKeyPair(new SecureRandom()).getPrivate().getEncoded());
-        File crxFile = testExecute(false, pemFile);
+        File crxFile = testExecute(false, pemFile, false);
+        checkMetadata(crxFile);
+        checkZipDataInCrxFile(crxFile);
+    }
+
+    @Test
+    public void testExecute_crx_privateKeyFileSpecifiedButAbsent() throws Exception {
+        try {
+            File pemFile = new File(temporaryFolder.newFolder(), "mykey.pem");
+            testExecute(false, pemFile, false);
+        } catch (MojoExecutionException e) {
+            assertTrue(e.getCause() instanceof FileNotFoundException);
+        }
+    }
+
+    @Test
+    public void testExecute_crx_privateKeyFileSpecifiedButAbsent_ignoreAbsent() throws Exception {
+        File pemFile = new File(temporaryFolder.newFolder(), "mykey.pem");
+        File crxFile = testExecute(false, pemFile, true);
         checkMetadata(crxFile);
         checkZipDataInCrxFile(crxFile);
     }
 
     @Test
     public void testExecute_zip_noPrivateKey() throws Exception {
-        File zipFile = testExecute(true, null);
+        File zipFile = testExecute(true, null, false);
         checkZipData(Files.asByteSource(zipFile).read());
     }
 
-    @Test
+    @Test(expected = PrivateKeyParameterConflictException.class)
     public void testExecute_zip_privateKey() throws Exception {
-        File pemFile = buildPemFile(KeyPairs.generateRsKeyPair(new SecureRandom()).getPrivate().getEncoded());
-        File zipFile = testExecute(true, pemFile);
-        checkZipData(Files.asByteSource(zipFile).read());
+        File pemFile = temporaryFolder.newFile();
+        testExecute(true, pemFile, false);
     }
 
     private File buildPemFile(byte[] privateKey) throws IOException {
@@ -84,10 +103,11 @@ public class PackExtensionMojoTest {
         return mojo;
     }
 
-    private File testExecute(boolean excludeHeader, @Nullable File privateKey) throws IOException, MojoExecutionException, URISyntaxException {
+    private File testExecute(boolean excludeHeader, @Nullable File privateKey, boolean generateKey) throws IOException, MojoExecutionException, URISyntaxException {
         PackExtensionMojo mojo = buildMojo();
         mojo.setExcludeHeader(excludeHeader);
         mojo.setPrivateKey(privateKey);
+        mojo.setGenerateKeyIfAbsent(generateKey);
         mojo.execute();
         File outputFile = mojo.getOutputFile();
         assertTrue("file length", outputFile.length() > 0);
@@ -117,5 +137,6 @@ public class PackExtensionMojoTest {
         }
         assertEquals("filepaths", ImmutableSet.of("manifest.json", "background.js"), ImmutableSet.copyOf(unzippage.fileEntries()));
     }
+
 
 }

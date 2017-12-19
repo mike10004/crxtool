@@ -55,29 +55,43 @@ public class PackExtensionMojo extends AbstractMojo {
     private File outputFile;
 
     /**
-     * Flag that specifies whether the CRX header should be included. If this is
+     * Flag that specifies whether the CRX header is to be included. If this is
      * true, the output file is in ZIP format.
      */
-    @Parameter
+    @Parameter(property = PROP_PREFIX + "excludeHeader")
     private boolean excludeHeader;
+
+    /**
+     * Flag that specifies whether a signing key is to be generated if the
+     * specified private key file is absent. Use in conjunction with
+     * {@link #privateKey}.
+     */
+    @Parameter(property = PROP_PREFIX + "generateKeyIfAbsent")
+    private boolean generateKeyIfAbsent;
 
     @Override
     public void execute() throws MojoExecutionException {
         File outputFile = getOutputFile();
         try {
             KeyPair keyPair;
-            if (privateKey != null) {
+            boolean excludeHeader = isExcludeHeader();
+            File privateKey_ = getPrivateKey();
+            if (privateKey_ != null && excludeHeader) {
+                throw new PrivateKeyParameterConflictException("private key file is specified but excludeHeader is true; if the header is excluded, no private key is required");
+            }
+            if (privateKey_ == null || (isGenerateKeyIfAbsent() && !privateKey_.isFile())) {
+                getLog().debug("generating private key (specified key file is " + privateKey_ + ")");
+                keyPair = KeyPairs.generateRsKeyPair(createRandom());
+            } else {
                 byte[] keyBytes;
-                try (Reader reader = new InputStreamReader(new FileInputStream(privateKey), StandardCharsets.US_ASCII)) {
+                try (Reader reader = new InputStreamReader(new FileInputStream(privateKey_), StandardCharsets.US_ASCII)) {
                     keyBytes = new PemParser().extractBytes(reader);
                 }
                 keyPair = KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(keyBytes);
-            } else {
-                keyPair = KeyPairs.generateRsKeyPair(createRandom());
             }
             Path extensionDir = sourceDirectory.toPath();
             com.google.common.io.Files.createParentDirs(outputFile);
-            if (isExcludeHeader()) {
+            if (excludeHeader) {
                 byte[] zipBytes = Zipping.zipDirectory(extensionDir, null);
                 java.nio.file.Files.write(outputFile.toPath(), zipBytes);
             } else {
@@ -132,4 +146,18 @@ public class PackExtensionMojo extends AbstractMojo {
         this.excludeHeader = excludeHeader;
     }
 
+    static class PrivateKeyParameterConflictException extends MojoExecutionException {
+
+        public PrivateKeyParameterConflictException(String message) {
+            super(message);
+        }
+    }
+
+    public boolean isGenerateKeyIfAbsent() {
+        return generateKeyIfAbsent;
+    }
+
+    public void setGenerateKeyIfAbsent(boolean generateKeyIfAbsent) {
+        this.generateKeyIfAbsent = generateKeyIfAbsent;
+    }
 }
