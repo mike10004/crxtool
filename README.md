@@ -1,4 +1,5 @@
 [![Travis build status](https://img.shields.io/travis/mike10004/crxtool.svg)](https://travis-ci.org/mike10004/crxtool)
+[![AppVeyor build status](https://ci.appveyor.com/api/projects/status/bb3s40548ffj3uf5?svg=true)](https://ci.appveyor.com/project/mike10004/crxtool)
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.mike10004/crxtool.svg)](https://repo1.maven.org/maven2/com/github/mike10004/crxtool/)
 
 # crxtool
