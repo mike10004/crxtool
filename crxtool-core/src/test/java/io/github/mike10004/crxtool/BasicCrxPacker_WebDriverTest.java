@@ -44,6 +44,7 @@ public class BasicCrxPacker_WebDriverTest {
                 .withEnvironment(xvfb.getController().newEnvironment())
                 .build();
         ChromeOptions options = new ChromeOptions();
+        options.addArguments("--no-sandbox");
         File crxFile = packExtension();
         options.addExtensions(crxFile);
         String html = "<!DOCTYPE html>" +
