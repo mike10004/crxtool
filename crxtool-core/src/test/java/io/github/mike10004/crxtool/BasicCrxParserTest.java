@@ -1,6 +1,7 @@
 package io.github.mike10004.crxtool;
 
 import com.google.common.io.ByteSource;
+import com.google.common.io.CharSource;
 import com.google.common.io.Resources;
 import io.github.mike10004.crxtool.CrxParser.CrxParsingException;
 import io.github.mike10004.crxtool.testing.Unzippage;
@@ -15,9 +16,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -51,7 +56,38 @@ public class BasicCrxParserTest {
             URL reference = getClass().getResource("/make_page_red/" + filename);
             byte[] actualBytes = entryBytes.read();
             byte[] expectedBytes = Resources.toByteArray(reference);
-            assertArrayEquals("file bytes", expectedBytes, actualBytes);
+            assertEqualsAsTextFiles("file bytes", expectedBytes, actualBytes, StandardCharsets.UTF_8);
+        }
+    }
+
+    /*
+     * Git changes the line endings of text files, but the crx has the original unix line endings, so without this
+     * extra attention, comparing a crx newly created on Windows to the original one created on Linux will fail.
+     * This method compares the files line-by-line, using {@link CharSource#readLines()} to do the normalization.
+     */
+    @SuppressWarnings("SameParameterValue")
+    private static void assertEqualsAsTextFiles(String message, byte[] expected, byte[] actual, Charset charset) {
+        String expectedStr = null, actualStr = null;
+        try {
+            expectedStr = charset.newDecoder().decode(ByteBuffer.wrap(expected)).toString();
+        } catch (CharacterCodingException e) {
+            System.err.println("failed to decode expected due to " + e);
+        }
+        try {
+            actualStr = charset.newDecoder().decode(ByteBuffer.wrap(actual)).toString();
+        } catch (CharacterCodingException e) {
+            System.err.println("failed to decode expected due to " + e);
+        }
+        if (expectedStr == null || actualStr == null) {
+            assertArrayEquals(message, expected, actual);
+        } else {
+            try {
+                List<String> expectedLines = CharSource.wrap(expectedStr).readLines();
+                List<String> actualLines = CharSource.wrap(expectedStr).readLines();
+                assertEquals(message, expectedLines, actualLines);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
