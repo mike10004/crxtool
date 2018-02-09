@@ -149,7 +149,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>23.0</version>
+                <version>23.6-jre</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
@@ -186,7 +186,7 @@
             <dependency>
                 <groupId>com.github.mike10004</groupId>
                 <artifactId>xvfb-testing</artifactId>
-                <version>0.14</version>
+                <version>0.16</version>
             </dependency>
             <dependency>
                 <groupId>io.github.bonigarcia</groupId>
