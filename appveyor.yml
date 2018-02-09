@@ -1,4 +1,4 @@
-version: 0.6.{build}
+version: 0.7.ci{build}
 image: Visual Studio 2017
 skip_commits:
   message: "[skip appveyor]"
