@@ -164,13 +164,17 @@ public class Chromedrivers {
 
     static abstract class ExecutingChromeVersionQuerier implements ChromeVersionQuerier {
 
+        private static final Logger log = LoggerFactory.getLogger(ExecutingChromeVersionQuerier.class);
+
         @Nullable
         @Override
         public String getChromeVersionString() {
             @Nullable File chromeExecutable = resolveChromeExecutable();
             if (chromeExecutable != null) {
+                log.info("chrome executable resolved at {}", chromeExecutable);
                 return captureVersion(chromeExecutable);
             }
+            log.info("chrome executable could not be detected");
             return null;
         }
 
