@@ -13,6 +13,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Range;
 import io.github.bonigarcia.wdm.BrowserManager;
 import io.github.bonigarcia.wdm.ChromeDriverManager;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.slf4j.Logger;
@@ -154,7 +155,7 @@ public class Chromedrivers {
                 return Integer.parseInt(DOT_SPLITTER.split(token).iterator().next());
             }
         }
-        throw new IllegalArgumentException("no tokens look like a version in " + StringUtils.abbreviate(chromeVersionString, 256));
+        throw new IllegalArgumentException(String.format("no tokens look like a version in \"%s\"", StringEscapeUtils.escapeJava(StringUtils.abbreviate(chromeVersionString, 256))));
     }
 
     interface ChromeVersionQuerier {
@@ -188,12 +189,18 @@ public class Chromedrivers {
          */
         @Nullable
         protected String captureVersion(File chromeExecutable) {
-            return execute(chromeExecutable, "--version");
+            String value = execute(chromeExecutable, "--version");
+            if (value != null) {
+                log.info("chrome version: {}", String.format("\"%s\"", StringEscapeUtils.escapeJava(value)));
+            } else {
+                log.warn("failed to capture version from chrome executable {}", chromeExecutable);
+            }
+            return value;
         }
 
     }
 
-    private static final int PROCESS_EXECUTION_TIMEOUT_MILLIS = 3000;
+    private static final int PROCESS_EXECUTION_TIMEOUT_MILLIS = 5000;
 
     @Nullable
     private static String execute(File executable, String...args) {
@@ -211,7 +218,11 @@ public class Chromedrivers {
             ProcessMonitor<String, String> processMonitor = subproc.launcher(processTracker).outputStrings(Charset.defaultCharset()).launch();
             ProcessResult<String, String> result = processMonitor.await(PROCESS_EXECUTION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
             if (result.exitCode() == 0) {
-                return result.content().stdout().trim();
+                String stdout = result.content().stdout().trim();
+                if (stdout.trim().isEmpty()) {
+                    log.warn("stdout is empty; stderr: {}", result.content().stderr());
+                }
+                return stdout;
             } else {
                 log.warn("executing {} with arguments {} failed: {}", executableName, Arrays.toString(args), result);
             }
