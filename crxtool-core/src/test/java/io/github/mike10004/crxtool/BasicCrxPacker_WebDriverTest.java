@@ -1,7 +1,7 @@
 package io.github.mike10004.crxtool;
 
 import com.github.mike10004.xvfbtesting.XvfbRule;
-import io.github.bonigarcia.wdm.ChromeDriverManager;
+import io.github.mike10004.crxtool.testing.Chromedrivers;
 import io.github.mike10004.nanochamp.server.NanoControl;
 import io.github.mike10004.nanochamp.server.NanoResponse;
 import io.github.mike10004.nanochamp.server.NanoServer;
@@ -35,7 +35,7 @@ public class BasicCrxPacker_WebDriverTest {
 
     @BeforeClass
     public static void configureChromedriver() {
-        ChromeDriverManager.getInstance().setup();
+        Chromedrivers.findBestVersion().setup();
     }
 
     @Test

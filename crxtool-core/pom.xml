@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.github.mike10004</groupId>
         <artifactId>crxtool</artifactId>
-        <version>0.7</version>
+        <version>0.8-SNAPSHOT</version>
     </parent>
     <artifactId>crxtool-core</artifactId>
     <name>crxtool-core</name>
@@ -48,11 +48,6 @@
         <dependency>
             <groupId>com.github.mike10004</groupId>
             <artifactId>xvfb-testing</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -13,7 +13,7 @@ Library for packing and unpacking Chrome extension `.crx` files.
     <dependency>
         <groupId>com.github.mike10004</groupId>
         <artifactId>crxtool-core</artifactId>
-        <version>0.5</version>
+        <version>0.7</version>
     </dependency>
 
 ### Usage
