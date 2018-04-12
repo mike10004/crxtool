@@ -22,10 +22,15 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.util.Objects.requireNonNull;
@@ -106,7 +111,7 @@ public class Chromedrivers {
     }
 
     private static BrowserManager configureBrowserManager(@Nullable String chromedriverVersion) {
-        BrowserManager m = ChromeDriverManager.getInstance();;
+        BrowserManager m = ChromeDriverManager.getInstance();
         if (chromedriverVersion != null) {
             return m.version(chromedriverVersion);
         }
@@ -115,6 +120,9 @@ public class Chromedrivers {
 
     static String determineBestChromedriverVersion() {
         @Nullable String chromeVersionString = new WhichingChromeVersionQuerier().getChromeVersionString();
+        if (chromeVersionString == null && SystemUtils.IS_OS_WINDOWS) {
+            chromeVersionString = new WindowsChromeVersionQuerier().getChromeVersionString();
+        }
         String chromedriverVersion = null;
         if (chromeVersionString != null) {
             int chromeMajorVersion = -1;
@@ -156,8 +164,6 @@ public class Chromedrivers {
 
     static abstract class ExecutingChromeVersionQuerier implements ChromeVersionQuerier {
 
-        private static final Logger log = LoggerFactory.getLogger(ExecutingChromeVersionQuerier.class);
-
         @Nullable
         @Override
         public String getChromeVersionString() {
@@ -178,22 +184,86 @@ public class Chromedrivers {
          */
         @Nullable
         protected String captureVersion(File chromeExecutable) {
-            try (ScopedProcessTracker processTracker = new ScopedProcessTracker()) {
-                Subprocess subproc = Subprocess.running(chromeExecutable).arg("--version").build();
-                ProcessMonitor<String, String> processMonitor = subproc.launcher(processTracker).outputStrings(Charset.defaultCharset()).launch();
-                ProcessResult<String, String> result = processMonitor.await(PRINT_VERSION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-                if (result.exitCode() == 0) {
-                    return result.content().stdout().trim();
-                } else {
-                    log.warn("executing chrome with --version option failed: {}", result);
+            return execute(chromeExecutable, "--version");
+        }
+
+    }
+
+    private static final int PROCESS_EXECUTION_TIMEOUT_MILLIS = 3000;
+
+    @Nullable
+    private static String execute(File executable, String...args) {
+        return execute(executable.getName(), Subprocess.running(executable), args);
+    }
+
+    @Nullable
+    private static String execute(String executable, String...args) {
+        return execute(executable, Subprocess.running(executable), args);
+    }
+
+    private static String execute(String executableName, Subprocess.Builder subprocessBuilder, String...args) {
+        try (ScopedProcessTracker processTracker = new ScopedProcessTracker()) {
+            Subprocess subproc = subprocessBuilder.args(Arrays.asList(args)).build();
+            ProcessMonitor<String, String> processMonitor = subproc.launcher(processTracker).outputStrings(Charset.defaultCharset()).launch();
+            ProcessResult<String, String> result = processMonitor.await(PROCESS_EXECUTION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            if (result.exitCode() == 0) {
+                return result.content().stdout().trim();
+            } else {
+                log.warn("executing {} with arguments {} failed: {}", executableName, Arrays.toString(args), result);
+            }
+        } catch (InterruptedException | java.util.concurrent.TimeoutException e) {
+            log.warn("failed to await termination of {} process after {} millis: {}", executableName, PROCESS_EXECUTION_TIMEOUT_MILLIS, e.toString());
+        }
+        return null;
+    }
+
+    static class WindowsChromeVersionQuerier extends ExecutingChromeVersionQuerier {
+
+        private static final String REG_KEY = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe";
+
+        private static List<File> buildLikelyPathsList() {
+            File userExecutable = new File(System.getProperty("user.home")).toPath()
+                    .resolve("AppData")
+                    .resolve("Local")
+                    .resolve("Google")
+                    .resolve("Chrome")
+                    .resolve("Application")
+                    .resolve("chrome.exe")
+                    .toFile();
+            List<File> systemRoots = Arrays.asList(new File("C:/Program Files/"), new File("C:/Program Files (x86)/"));
+            Stream<File> systemExePaths = systemRoots.stream().map(root -> {
+                return root.toPath().resolve("Google").resolve("Chrome").resolve("Application").resolve("chrome.exe").toFile();
+            });
+            return Stream.concat(Stream.of(userExecutable), systemExePaths).collect(Collectors.toList());
+        }
+
+        @Nullable
+        @Override
+        protected File resolveChromeExecutable() {
+            // "%UserProfile%\\AppData\\Local\\Google\\Chrome\\Application\\chrome --version"
+            List<File> likelyExePaths = buildLikelyPathsList();
+            for (File chromeExe : likelyExePaths) {
+                if (chromeExe.isFile() && chromeExe.canExecute()) {
+                    return chromeExe;
                 }
-            } catch (InterruptedException | java.util.concurrent.TimeoutException e) {
-                log.warn("failed to await termination of process after {} millis: {}", PRINT_VERSION_TIMEOUT_MILLIS, e.toString());
+            }
+            return queryRegistryForExePath();
+        }
+
+        protected File queryRegistryForExePath() {
+            String regOutput = execute("reg", "QUERY", REG_KEY);
+            if (regOutput != null) {
+                //                                                             C:\path\to\...
+                Matcher m = Pattern.compile("\\s*\\(Default\\)\\s+REG_SZ\\s+(\\w:.+)\\s*$").matcher(regOutput);
+                if (m.find()) {
+                    File pathname = new File(m.group(1));
+                    if (pathname.isFile() && pathname.canExecute()) {
+                        return pathname;
+                    }
+                }
             }
             return null;
         }
-
-        private static final int PRINT_VERSION_TIMEOUT_MILLIS = 3000;
     }
 
     static class WhichingChromeVersionQuerier extends ExecutingChromeVersionQuerier {
