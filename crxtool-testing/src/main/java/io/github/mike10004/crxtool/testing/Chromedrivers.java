@@ -1,5 +1,25 @@
 package io.github.mike10004.crxtool.testing;
 
+/*
+    Requires these dependencies:
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>23.6-jre</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.mike10004</groupId>
+            <artifactId>native-helper</artifactId>
+            <version>8.0.5</version>
+        </dependency>
+ */
+
 import com.github.mike10004.nativehelper.subprocess.ProcessMonitor;
 import com.github.mike10004.nativehelper.subprocess.ProcessResult;
 import com.github.mike10004.nativehelper.subprocess.ScopedProcessTracker;
@@ -11,13 +31,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Range;
-import io.github.bonigarcia.wdm.BrowserManager;
-import io.github.bonigarcia.wdm.ChromeDriverManager;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -28,6 +44,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -38,7 +56,7 @@ import static java.util.Objects.requireNonNull;
 
 public class Chromedrivers {
 
-    private static final Logger log = LoggerFactory.getLogger(Chromedrivers.class);
+    private static final Logger log = Logger.getLogger(Chromedrivers.class.getName());
 
     private Chromedrivers() {}
 
@@ -111,15 +129,12 @@ public class Chromedrivers {
         return FINDER_INSTANCE;
     }
 
-    private static BrowserManager configureBrowserManager(@Nullable String chromedriverVersion) {
-        BrowserManager m = ChromeDriverManager.getInstance();
-        if (chromedriverVersion != null) {
-            return m.version(chromedriverVersion);
-        }
-        return m;
-    }
-
-    static String determineBestChromedriverVersion() {
+    /**
+     * Determines the best Chromedriver version for the installed version of Google Chrome.
+     * @return the version string, or null if not detectable
+     */
+    @Nullable
+    public static String determineBestChromedriverVersion() {
         @Nullable String chromeVersionString = new WhichingChromeVersionQuerier().getChromeVersionString();
         if (chromeVersionString == null && SystemUtils.IS_OS_WINDOWS) {
             chromeVersionString = new WindowsChromeVersionQuerier().getChromeVersionString();
@@ -130,19 +145,11 @@ public class Chromedrivers {
             try {
                 chromeMajorVersion = parseChromeMajorVersion(chromeVersionString);
             } catch (RuntimeException e) {
-                log.info("failed to parse major version from {} due to {}", StringUtils.abbreviate(chromeVersionString, 128), e.toString());
+                log.log(Level.INFO, "failed to parse major version from {0} due to {1}", new Object[]{StringUtils.abbreviate(chromeVersionString, 128), e.toString()});
             }
             chromedriverVersion = getFinderInstance().findNewestCompatibleChromedriverVersion(chromeMajorVersion);
         }
         return chromedriverVersion;
-    }
-
-    /**
-     * Determines the appropriate chromedriver version for the installed version of Chrome.
-     * @return a {@link ChromeDriverManager} instance configured with that version
-     */
-    public static BrowserManager findBestVersion() {
-        return configureBrowserManager(determineBestChromedriverVersion());
     }
 
     private static final Splitter WHITESPACE_SPLITTER = Splitter.on(CharMatcher.whitespace()).omitEmptyStrings().trimResults();
@@ -165,14 +172,14 @@ public class Chromedrivers {
 
     static abstract class ExecutingChromeVersionQuerier implements ChromeVersionQuerier {
 
-        private static final Logger log = LoggerFactory.getLogger(ExecutingChromeVersionQuerier.class);
+        private static final Logger log = Logger.getLogger(ExecutingChromeVersionQuerier.class.getName());
 
         @Nullable
         @Override
         public String getChromeVersionString() {
             @Nullable File chromeExecutable = resolveChromeExecutable();
             if (chromeExecutable != null) {
-                log.info("chrome executable resolved at {}", chromeExecutable);
+                log.log(Level.INFO, "chrome executable resolved at {0}", chromeExecutable);
                 return captureVersion(chromeExecutable);
             }
             log.info("chrome executable could not be detected");
@@ -191,9 +198,9 @@ public class Chromedrivers {
         protected String captureVersion(File chromeExecutable) {
             String value = execute(chromeExecutable, "--version");
             if (value != null) {
-                log.info("chrome version: {}", String.format("\"%s\"", StringEscapeUtils.escapeJava(value)));
+                log.log(Level.INFO, "chrome version: {0}", String.format("\"%s\"", StringEscapeUtils.escapeJava(value)));
             } else {
-                log.warn("failed to capture version from chrome executable {}", chromeExecutable);
+                log.log(Level.WARNING, "failed to capture version from chrome executable {0}", chromeExecutable);
             }
             return value;
         }
@@ -220,14 +227,14 @@ public class Chromedrivers {
             if (result.exitCode() == 0) {
                 String stdout = result.content().stdout().trim();
                 if (stdout.trim().isEmpty()) {
-                    log.warn("stdout is empty; stderr: {}", result.content().stderr());
+                    log.log(Level.INFO, "stdout is empty; stderr: {0}", result.content().stderr());
                 }
                 return stdout;
             } else {
-                log.warn("executing {} with arguments {} failed: {}", executableName, Arrays.toString(args), result);
+                log.log(Level.WARNING, "executing {0} with arguments {1} failed: {2}", new Object[]{executableName, Arrays.toString(args), result});
             }
         } catch (InterruptedException | java.util.concurrent.TimeoutException e) {
-            log.warn("failed to await termination of {} process after {} millis: {}", executableName, PROCESS_EXECUTION_TIMEOUT_MILLIS, e.toString());
+            log.log(Level.WARNING, "failed to await termination of {0} process after {1} millis: {2}", new Object[]{executableName, PROCESS_EXECUTION_TIMEOUT_MILLIS, e.toString()});
         }
         return null;
     }
@@ -283,7 +290,7 @@ public class Chromedrivers {
 
     static class WhichingChromeVersionQuerier extends ExecutingChromeVersionQuerier {
 
-        private static final Logger log = LoggerFactory.getLogger(WhichingChromeVersionQuerier.class);
+        private static final Logger log = Logger.getLogger(WhichingChromeVersionQuerier.class.getName());
 
         private static final ImmutableSet<String> CHROME_EXECUTABLE_NAMES = ImmutableSet.of("google-chrome", "chromium-browser", "chrome");
 
@@ -295,7 +302,7 @@ public class Chromedrivers {
                     try {
                         return new File(path);
                     } catch (Exception e) {
-                        log.info("failed to execute `{} --version`: {}", path, e.toString());
+                        log.log(Level.INFO, "failed to execute `{0} --version`: {1}", new Object[]{path, e});
                     }
                 }
             }
@@ -324,7 +331,7 @@ public class Chromedrivers {
                     }
                 }
             } catch (RuntimeException e) {
-                log.warn("failed to which {}: {}", input, e.toString());
+                log.log(Level.WARNING, "failed to which {0}: {1}", new Object[]{input, e});
             }
             return null;
         }
