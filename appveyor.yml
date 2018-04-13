@@ -10,6 +10,6 @@ build_script:
 
     mvn --version
 
-    "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --version
+    "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --disable-gpu --version
 
     mvn install --quiet --batch-mode
