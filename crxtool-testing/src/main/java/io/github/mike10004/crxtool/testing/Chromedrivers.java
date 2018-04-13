@@ -14,16 +14,12 @@ package io.github.mike10004.crxtool.testing;
             <version>3.6</version>
         </dependency>
         <dependency>
-            <groupId>com.github.mike10004</groupId>
-            <artifactId>native-helper</artifactId>
-            <version>8.0.5</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-exec</artifactId>
+            <version>1.3</version>
         </dependency>
  */
 
-import com.github.mike10004.nativehelper.subprocess.ProcessMonitor;
-import com.github.mike10004.nativehelper.subprocess.ProcessResult;
-import com.github.mike10004.nativehelper.subprocess.ScopedProcessTracker;
-import com.github.mike10004.nativehelper.subprocess.Subprocess;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -31,19 +27,25 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Range;
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.ExecuteWatchdog;
+import org.apache.commons.exec.Executor;
+import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -162,6 +164,7 @@ public class Chromedrivers {
                 return Integer.parseInt(DOT_SPLITTER.split(token).iterator().next());
             }
         }
+        //noinspection deprecation
         throw new IllegalArgumentException(String.format("no tokens look like a version in \"%s\"", StringEscapeUtils.escapeJava(StringUtils.abbreviate(chromeVersionString, 256))));
     }
 
@@ -196,7 +199,7 @@ public class Chromedrivers {
          */
         @Nullable
         protected String captureVersion(File chromeExecutable) {
-            String value = execute(chromeExecutable, "--version");
+            String value = execute(chromeExecutable, "--version", "--no-sandbox");
             if (value != null) {
                 log.log(Level.INFO, "chrome version: {0}", String.format("\"%s\"", StringEscapeUtils.escapeJava(value)));
             } else {
@@ -207,34 +210,45 @@ public class Chromedrivers {
 
     }
 
-    private static final int PROCESS_EXECUTION_TIMEOUT_MILLIS = 5000;
+    private static final int PROCESS_EXECUTION_TIMEOUT_MILLIS = 10000;
 
     @Nullable
     private static String execute(File executable, String...args) {
-        return execute(executable.getName(), Subprocess.running(executable), args);
+        return execute(executable.getAbsolutePath(), args);
     }
 
     @Nullable
     private static String execute(String executable, String...args) {
-        return execute(executable, Subprocess.running(executable), args);
+        return execute(0, executable, args);
     }
 
-    private static String execute(String executableName, Subprocess.Builder subprocessBuilder, String...args) {
-        try (ScopedProcessTracker processTracker = new ScopedProcessTracker()) {
-            Subprocess subproc = subprocessBuilder.args(Arrays.asList(args)).build();
-            ProcessMonitor<String, String> processMonitor = subproc.launcher(processTracker).outputStrings(Charset.defaultCharset()).launch();
-            ProcessResult<String, String> result = processMonitor.await(PROCESS_EXECUTION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-            if (result.exitCode() == 0) {
-                String stdout = result.content().stdout().trim();
+    @Nullable
+    private static String execute(int attempt, String executable, String...args) {
+        Executor executor = new DefaultExecutor();
+        executor.setExitValues(null);
+        CommandLine commandLine = new CommandLine(executable);
+        Stream.of(args).forEach(commandLine::addArgument);
+        ExecuteWatchdog watchdog = new ExecuteWatchdog(PROCESS_EXECUTION_TIMEOUT_MILLIS);
+        ByteArrayOutputStream stdoutBucket = new ByteArrayOutputStream(128);
+        ByteArrayOutputStream stderrBucket = new ByteArrayOutputStream(128);
+        Charset charset = Charset.defaultCharset();
+        PumpStreamHandler streamHandler = new PumpStreamHandler(stdoutBucket, stderrBucket);
+        executor.setStreamHandler(streamHandler);
+        executor.setWatchdog(watchdog);
+        try {
+            int exitCode = executor.execute(commandLine);
+            String stdout = new String(stdoutBucket.toByteArray(), charset);
+            String stderr = new String(stderrBucket.toByteArray(), charset);
+            if (exitCode == 0) {
                 if (stdout.trim().isEmpty()) {
-                    log.log(Level.INFO, "stdout is empty; stderr: {0}", result.content().stderr());
+                    log.log(Level.INFO, "stdout is empty; stderr: {0}", stderr);
                 }
                 return stdout;
             } else {
-                log.log(Level.WARNING, "executing {0} with arguments {1} failed: {2}", new Object[]{executableName, Arrays.toString(args), result});
+                log.log(Level.WARNING, "executing {0} with arguments {1} failed: {2}", new Object[]{executable, Arrays.toString(args), stderr});
             }
-        } catch (InterruptedException | java.util.concurrent.TimeoutException e) {
-            log.log(Level.WARNING, "failed to await termination of {0} process after {1} millis: {2}", new Object[]{executableName, PROCESS_EXECUTION_TIMEOUT_MILLIS, e.toString()});
+        } catch (IOException e) {
+            log.log(Level.WARNING, "failed to await termination of {0} process after {1} millis: {2}", new Object[]{executable, PROCESS_EXECUTION_TIMEOUT_MILLIS, e.toString()});
         }
         return null;
     }
@@ -262,7 +276,7 @@ public class Chromedrivers {
         @Nullable
         @Override
         protected File resolveChromeExecutable() {
-            // "%UserProfile%\\AppData\\Local\\Google\\Chrome\\Application\\chrome --version"
+            // %UserProfile%\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe
             List<File> likelyExePaths = buildLikelyPathsList();
             for (File chromeExe : likelyExePaths) {
                 if (chromeExe.isFile() && chromeExe.canExecute()) {
