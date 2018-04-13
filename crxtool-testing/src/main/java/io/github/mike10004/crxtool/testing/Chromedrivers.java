@@ -219,11 +219,6 @@ public class Chromedrivers {
 
     @Nullable
     private static String execute(String executable, String...args) {
-        return execute(0, executable, args);
-    }
-
-    @Nullable
-    private static String execute(int attempt, String executable, String...args) {
         Executor executor = new DefaultExecutor();
         executor.setExitValues(null);
         CommandLine commandLine = new CommandLine(executable);
