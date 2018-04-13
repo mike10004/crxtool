@@ -15,3 +15,7 @@ buildNumber.properties
 /*/*.iml
 
 /*/target/
+
+.project
+.settings/
+.classpath
