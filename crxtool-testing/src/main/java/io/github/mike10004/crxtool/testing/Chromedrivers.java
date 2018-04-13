@@ -199,7 +199,7 @@ public class Chromedrivers {
          */
         @Nullable
         protected String captureVersion(File chromeExecutable) {
-            String value = execute(chromeExecutable, "--version", "--no-sandbox");
+            String value = execute(chromeExecutable, "--no-sandbox", "--disable-gpu", "--version");
             if (value != null) {
                 log.log(Level.INFO, "chrome version: {0}", String.format("\"%s\"", StringEscapeUtils.escapeJava(value)));
             } else {

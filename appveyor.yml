@@ -10,4 +10,6 @@ build_script:
 
     mvn --version
 
+    "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --version
+
     mvn install --quiet --batch-mode
