@@ -8,12 +8,12 @@ Library for packing and unpacking Chrome extension `.crx` files.
 
 ## Core Library
 
-### Maven Dependency Info
+### Maven Coordinates
 
     <dependency>
         <groupId>com.github.mike10004</groupId>
         <artifactId>crxtool-core</artifactId>
-        <version>0.7</version>
+        <version>0.9</version>
     </dependency>
 
 ### Usage
@@ -41,13 +41,13 @@ Library for packing and unpacking Chrome extension `.crx` files.
 
 ## Maven Plugin
 
-### Maven Dependency Info
+### Maven Coordinates
 
-    <dependency>
+    <plugin>
         <groupId>com.github.mike10004</groupId>
         <artifactId>crxtool-maven-plugin</artifactId>
-        <version>0.5</version>
-    </dependency>
+        <version>0.9</version>
+    </plugin>
 
 ### Usage
 
@@ -58,7 +58,7 @@ Place extension source files in `src/main/extension`.
             <plugin>
                 <groupId>com.github.mike10004</groupId>
                 <artifactId>crxtool-maven-plugin</artifactId>
-                <version>0.5</version>
+                <version>0.9</version>
                 <executions>
                     <execution>
                         <id>pack</id>
