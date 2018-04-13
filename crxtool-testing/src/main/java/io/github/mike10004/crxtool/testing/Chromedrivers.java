@@ -173,9 +173,85 @@ public class Chromedrivers {
         String getChromeVersionString();
     }
 
-    static abstract class ExecutingChromeVersionQuerier implements ChromeVersionQuerier {
+    private interface VersionCapturer {
+
+        boolean isRunnable();
+
+        @Nullable
+        String captureVersion(File chromeExecutable);
+    }
+
+    private static class ChromeExecutingVersionCapturer implements VersionCapturer {
+
+        @Override
+        public boolean isRunnable() {
+            return !SystemUtils.IS_OS_WINDOWS;
+        }
+
+        @Nullable
+        @Override
+        public String captureVersion(File chromeExecutable) {
+            String value = execute(chromeExecutable, "--no-sandbox", "--disable-gpu", "--version");
+            if (value != null) {
+                log.log(Level.INFO, "chrome version: {0}", String.format("\"%s\"", StringEscapeUtils.escapeJava(value)));
+            } else {
+                log.log(Level.WARNING, "failed to capture version from chrome executable {0}", chromeExecutable);
+            }
+            return value;
+        }
+    }
+
+    /*
+     * https://bugs.chromium.org/p/chromium/issues/detail?id=158372#c13
+     */
+    private static class WmicVersionCapturer implements VersionCapturer {
+        @Override
+        public boolean isRunnable() {
+            return SystemUtils.IS_OS_WINDOWS;
+        }
+
+        @Nullable
+        @Override
+        public String captureVersion(File chromeExecutable) {
+            String wmicOutput = execute("wmic", "datafile", "where", "name=" + chromeExecutable.getAbsolutePath(), "get", "Version", "/value");
+            wmicOutput = StringUtils.trim(wmicOutput);
+            wmicOutput = StringUtils.removeStart(wmicOutput, "Version=");
+            return wmicOutput;
+        }
+    }
+
+    /*
+     * https://stackoverflow.com/questions/30686/get-file-version-in-powershell
+     */
+    private static class PowershellVersionCapturer implements VersionCapturer {
+
+        @Override
+        public boolean isRunnable() {
+            return SystemUtils.IS_OS_WINDOWS;
+        }
+
+        @Nullable
+        @Override
+        public String captureVersion(File chromeExecutable) {
+            String chromeExecutablePath = chromeExecutable.getAbsolutePath().replace('\\', '/');
+            String powershellArg = String.format("(Get-Item \"%s\").VersionInfo.FileVersion", chromeExecutablePath);
+            return execute("powershell", powershellArg);
+        }
+    }
+
+    private static abstract class ExecutingChromeVersionQuerier implements ChromeVersionQuerier {
 
         private static final Logger log = Logger.getLogger(ExecutingChromeVersionQuerier.class.getName());
+
+        private final ImmutableList<VersionCapturer> versionCapturers;
+
+        public ExecutingChromeVersionQuerier() {
+            versionCapturers = ImmutableList.<VersionCapturer>builder()
+                    .add(new ChromeExecutingVersionCapturer())
+                    .add(new PowershellVersionCapturer())
+                    .add(new WmicVersionCapturer())
+                    .build();
+        }
 
         @Nullable
         @Override
@@ -192,20 +268,18 @@ public class Chromedrivers {
         @Nullable
         protected abstract File resolveChromeExecutable();
 
-        /**
-         * Captures the version string printed when Chrome is executed with the {@code --version} option.
-         * @param chromeExecutable chrome executable pathname
-         * @return the version string, or null if it execution failed
-         */
         @Nullable
         protected String captureVersion(File chromeExecutable) {
-            String value = execute(chromeExecutable, "--no-sandbox", "--disable-gpu", "--version");
-            if (value != null) {
-                log.log(Level.INFO, "chrome version: {0}", String.format("\"%s\"", StringEscapeUtils.escapeJava(value)));
-            } else {
-                log.log(Level.WARNING, "failed to capture version from chrome executable {0}", chromeExecutable);
+            for (VersionCapturer versionCapturer : versionCapturers) {
+                if (versionCapturer.isRunnable()) {
+                    String value = versionCapturer.captureVersion(chromeExecutable);
+                    if (value != null) {
+                        return value;
+                    }
+                }
             }
-            return value;
+            log.log(Level.WARNING, "none of these worked: {0}", versionCapturers);
+            return null;
         }
 
     }
@@ -248,7 +322,7 @@ public class Chromedrivers {
         return null;
     }
 
-    static class WindowsChromeVersionQuerier extends ExecutingChromeVersionQuerier {
+    private static class WindowsChromeVersionQuerier extends ExecutingChromeVersionQuerier {
 
         private static final String REG_KEY = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe";
 
@@ -297,7 +371,7 @@ public class Chromedrivers {
         }
     }
 
-    static class WhichingChromeVersionQuerier extends ExecutingChromeVersionQuerier {
+    private static class WhichingChromeVersionQuerier extends ExecutingChromeVersionQuerier {
 
         private static final Logger log = Logger.getLogger(WhichingChromeVersionQuerier.class.getName());
 
