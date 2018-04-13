@@ -137,21 +137,25 @@ public class Chromedrivers {
      */
     @Nullable
     public static String determineBestChromedriverVersion() {
-        @Nullable String chromeVersionString = new WhichingChromeVersionQuerier().getChromeVersionString();
-        if (chromeVersionString == null && SystemUtils.IS_OS_WINDOWS) {
-            chromeVersionString = new WindowsChromeVersionQuerier().getChromeVersionString();
-        }
-        String chromedriverVersion = null;
-        if (chromeVersionString != null) {
-            int chromeMajorVersion = -1;
-            try {
-                chromeMajorVersion = parseChromeMajorVersion(chromeVersionString);
-            } catch (RuntimeException e) {
-                log.log(Level.INFO, "failed to parse major version from {0} due to {1}", new Object[]{StringUtils.abbreviate(chromeVersionString, 128), e.toString()});
+        ChromeExecutableResolver executableResolver = SystemUtils.IS_OS_WINDOWS
+                ? new WindowsChromeExecutableResolver()
+                : new PathVariableSearchingResolver();
+        @Nullable File chromeExecutable = executableResolver.resolve();
+        if (chromeExecutable != null) {
+            for (VersionCapturer versionCapturer : _ExecutingChromeVersionQuerier.versionCapturers) {
+                @Nullable String chromeVersionString = versionCapturer.captureVersion(chromeExecutable);
+                if (chromeVersionString != null) {
+                    try {
+                        int chromeMajorVersion = parseChromeMajorVersion(chromeVersionString);
+                        return getFinderInstance().findNewestCompatibleChromedriverVersion(chromeMajorVersion);
+                    } catch (RuntimeException e) {
+                        log.log(Level.INFO, "failed to parse major version from {0} due to {1}", new Object[]{StringEscapeUtils.escapeJava(StringUtils.abbreviate(chromeVersionString, 256)), e});
+                    }
+                }
             }
-            chromedriverVersion = getFinderInstance().findNewestCompatibleChromedriverVersion(chromeMajorVersion);
+            log.log(Level.WARNING, "none of these worked: {0}", _ExecutingChromeVersionQuerier.versionCapturers);
         }
-        return chromedriverVersion;
+        return null;
     }
 
     private static final Splitter WHITESPACE_SPLITTER = Splitter.on(CharMatcher.whitespace()).omitEmptyStrings().trimResults();
@@ -168,9 +172,9 @@ public class Chromedrivers {
         throw new IllegalArgumentException(String.format("no tokens look like a version in \"%s\"", StringEscapeUtils.escapeJava(StringUtils.abbreviate(chromeVersionString, 256))));
     }
 
-    interface ChromeVersionQuerier {
+    interface ChromeExecutableResolver {
         @Nullable
-        String getChromeVersionString();
+        File resolve();
     }
 
     private interface VersionCapturer {
@@ -239,48 +243,13 @@ public class Chromedrivers {
         }
     }
 
-    private static abstract class ExecutingChromeVersionQuerier implements ChromeVersionQuerier {
+    private static class _ExecutingChromeVersionQuerier  {
 
-        private static final Logger log = Logger.getLogger(ExecutingChromeVersionQuerier.class.getName());
-
-        private final ImmutableList<VersionCapturer> versionCapturers;
-
-        public ExecutingChromeVersionQuerier() {
-            versionCapturers = ImmutableList.<VersionCapturer>builder()
+        private static final ImmutableList<VersionCapturer> versionCapturers = ImmutableList.<VersionCapturer>builder()
                     .add(new ChromeExecutingVersionCapturer())
                     .add(new PowershellVersionCapturer())
                     .add(new WmicVersionCapturer())
                     .build();
-        }
-
-        @Nullable
-        @Override
-        public String getChromeVersionString() {
-            @Nullable File chromeExecutable = resolveChromeExecutable();
-            if (chromeExecutable != null) {
-                log.log(Level.INFO, "chrome executable resolved at {0}", chromeExecutable);
-                return captureVersion(chromeExecutable);
-            }
-            log.info("chrome executable could not be detected");
-            return null;
-        }
-
-        @Nullable
-        protected abstract File resolveChromeExecutable();
-
-        @Nullable
-        protected String captureVersion(File chromeExecutable) {
-            for (VersionCapturer versionCapturer : versionCapturers) {
-                if (versionCapturer.isRunnable()) {
-                    String value = versionCapturer.captureVersion(chromeExecutable);
-                    if (value != null) {
-                        return value;
-                    }
-                }
-            }
-            log.log(Level.WARNING, "none of these worked: {0}", versionCapturers);
-            return null;
-        }
 
     }
 
@@ -322,7 +291,7 @@ public class Chromedrivers {
         return null;
     }
 
-    private static class WindowsChromeVersionQuerier extends ExecutingChromeVersionQuerier {
+    private static class WindowsChromeExecutableResolver implements ChromeExecutableResolver {
 
         private static final String REG_KEY = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths\\chrome.exe";
 
@@ -344,7 +313,7 @@ public class Chromedrivers {
 
         @Nullable
         @Override
-        protected File resolveChromeExecutable() {
+        public File resolve() {
             // %UserProfile%\\AppData\\Local\\Google\\Chrome\\Application\\chrome.exe
             List<File> likelyExePaths = buildLikelyPathsList();
             for (File chromeExe : likelyExePaths) {
@@ -371,21 +340,21 @@ public class Chromedrivers {
         }
     }
 
-    private static class WhichingChromeVersionQuerier extends ExecutingChromeVersionQuerier {
+    private static class PathVariableSearchingResolver implements ChromeExecutableResolver {
 
-        private static final Logger log = Logger.getLogger(WhichingChromeVersionQuerier.class.getName());
+        private static final Logger log = Logger.getLogger(PathVariableSearchingResolver.class.getName());
 
         private static final ImmutableSet<String> CHROME_EXECUTABLE_NAMES = ImmutableSet.of("google-chrome", "chromium-browser", "chrome");
 
         @Override
-        protected File resolveChromeExecutable() {
+        public File resolve() {
             for (String chromeExecutableName : CHROME_EXECUTABLE_NAMES) {
                 String path = findByNameOnSystemPath(chromeExecutableName);
                 if (path != null) {
                     try {
                         return new File(path);
                     } catch (Exception e) {
-                        log.log(Level.INFO, "failed to execute `{0} --version`: {1}", new Object[]{path, e});
+                        log.log(Level.INFO, "failed to resolve chrome executable by name {0}: {1}", new Object[]{path, e});
                     }
                 }
             }
