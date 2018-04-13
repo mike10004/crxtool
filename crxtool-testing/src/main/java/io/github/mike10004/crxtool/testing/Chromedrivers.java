@@ -142,7 +142,7 @@ public class Chromedrivers {
                 : new PathVariableSearchingResolver();
         @Nullable File chromeExecutable = executableResolver.resolve();
         if (chromeExecutable != null) {
-            for (VersionCapturer versionCapturer : _ExecutingChromeVersionQuerier.versionCapturers) {
+            for (VersionCapturer versionCapturer : VersionCapturersHolder.INSTANCES) {
                 @Nullable String chromeVersionString = versionCapturer.captureVersion(chromeExecutable);
                 if (chromeVersionString != null) {
                     try {
@@ -153,7 +153,7 @@ public class Chromedrivers {
                     }
                 }
             }
-            log.log(Level.WARNING, "none of these worked: {0}", _ExecutingChromeVersionQuerier.versionCapturers);
+            log.log(Level.WARNING, "none of these worked: {0}", VersionCapturersHolder.INSTANCES);
         }
         return null;
     }
@@ -205,52 +205,10 @@ public class Chromedrivers {
         }
     }
 
-    /*
-     * https://bugs.chromium.org/p/chromium/issues/detail?id=158372#c13
-     */
-    private static class WmicVersionCapturer implements VersionCapturer {
-        @Override
-        public boolean isRunnable() {
-            return SystemUtils.IS_OS_WINDOWS;
-        }
-
-        @Nullable
-        @Override
-        public String captureVersion(File chromeExecutable) {
-            String wmicOutput = execute("wmic", "datafile", "where", "name=" + chromeExecutable.getAbsolutePath(), "get", "Version", "/value");
-            wmicOutput = StringUtils.trim(wmicOutput);
-            wmicOutput = StringUtils.removeStart(wmicOutput, "Version=");
-            return wmicOutput;
-        }
-    }
-
-    /*
-     * https://stackoverflow.com/questions/30686/get-file-version-in-powershell
-     */
-    private static class PowershellVersionCapturer implements VersionCapturer {
-
-        @Override
-        public boolean isRunnable() {
-            return SystemUtils.IS_OS_WINDOWS;
-        }
-
-        @Nullable
-        @Override
-        public String captureVersion(File chromeExecutable) {
-            String chromeExecutablePath = chromeExecutable.getAbsolutePath().replace('\\', '/');
-            String powershellArg = String.format("(Get-Item \"%s\").VersionInfo.FileVersion", chromeExecutablePath);
-            return execute("powershell", powershellArg);
-        }
-    }
-
-    private static class _ExecutingChromeVersionQuerier  {
-
-        private static final ImmutableList<VersionCapturer> versionCapturers = ImmutableList.<VersionCapturer>builder()
+    private static class VersionCapturersHolder {
+        public static final ImmutableList<VersionCapturer> INSTANCES = ImmutableList.<VersionCapturer>builder()
                     .add(new ChromeExecutingVersionCapturer())
-                    .add(new PowershellVersionCapturer())
-                    .add(new WmicVersionCapturer())
                     .build();
-
     }
 
     private static final int PROCESS_EXECUTION_TIMEOUT_MILLIS = 10000;
@@ -283,7 +241,7 @@ public class Chromedrivers {
                 }
                 return stdout;
             } else {
-                log.log(Level.WARNING, "executing {0} with arguments {1} failed: {2}", new Object[]{executable, Arrays.toString(args), stderr});
+                log.log(Level.WARNING, "executing {0} with arguments {1} failed: {2}", new Object[]{executable, Arrays.toString(args), StringEscapeUtils.escapeJava(stderr)});
             }
         } catch (IOException e) {
             log.log(Level.WARNING, "failed to await termination of {0} process after {1} millis: {2}", new Object[]{executable, PROCESS_EXECUTION_TIMEOUT_MILLIS, e.toString()});
