@@ -14,8 +14,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 
-import static com.google.common.base.Preconditions.checkState;
-
 /**
  * Basic implementation of a Chrome extension parser.
  */
@@ -36,7 +34,13 @@ public class BasicCrxParser implements CrxParser {
 
     private void checkMagicNumber(String magicNumber) throws CrxParsingException {
         if (!"Cr24".equals(magicNumber)) {
-            throw new CrxParsingException("incorrect magic number: " + magicNumber);
+            try {
+                byte[] magicNumberBytes = magicNumber.getBytes(StandardCharsets.US_ASCII);
+                throw new CrxParsingException("incorrect magic number: 0x" + BaseEncoding.base16().encode(magicNumberBytes));
+            } catch (RuntimeException e) {
+                throw new CrxParsingException("incorrect magic number (unreportable)");
+            }
+
         }
     }
 
