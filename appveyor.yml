@@ -10,8 +10,6 @@ build_script:
 
     mvn --version
 
-    "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --version
-    
     echo "CHROMEDRIVER_VERSION=%CHROMEDRIVER_VERSION%"
 
     mvn install --quiet --batch-mode -Dwdm.chromeDriverVersion=%CHROMEDRIVER_VERSION%
