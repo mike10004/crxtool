@@ -19,13 +19,7 @@ import java.util.Locale;
  */
 public class BasicCrxParser implements CrxParser {
 
-    private static final int MAX_SANE_PUBKEY_LENGTH = 1024 * 32;
-    private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 64;
-
     private static final BasicCrxParser DEFAULT_INSTANCE = new BasicCrxParser();
-    private static final int ID_LEN = 32;
-    private static final char[] DIGEST_CHARS = "0123456789abcdef".toCharArray();
-    private static final char[] CRX_ID_CHARS = "abcdefghijklmnop".toCharArray();
 
     /**
      * Constructs an instance.
@@ -44,51 +38,51 @@ public class BasicCrxParser implements CrxParser {
         }
     }
 
-    @Override
-    public CrxMetadata parseMetadata(InputStream crxInput) throws IOException {
-        LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
-        byte[] magicNumberBytes = new byte[4];
-        in.readFully(magicNumberBytes);
+    private static final int EXPECTED_MAGIC_NUMBER_LEN_BYTES = 4;
+
+    protected String readMagicNumber(InputStream in) throws IOException {
+        byte[] magicNumberBytes = new byte[EXPECTED_MAGIC_NUMBER_LEN_BYTES];
+        ByteStreams.readFully(in, magicNumberBytes);
         String magicNumber = new String(magicNumberBytes, StandardCharsets.US_ASCII);
-        checkMagicNumber(magicNumber);
-        int version = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
-        int pubkeyLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
-        int signatureLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
-        if (pubkeyLength <= 0 || pubkeyLength > MAX_SANE_PUBKEY_LENGTH) {
-            throw new CrxParsingException(String.format("public key length is insane: %s", pubkeyLength));
-        }
-        if (signatureLength <= 0 || signatureLength > MAX_SANE_SIGNATURE_LENGTH) {
-            throw new CrxParsingException(String.format("signature length is insane: %s", signatureLength));
-        }
-        byte[] pubkeyBytes = new byte[pubkeyLength];
-        ByteStreams.readFully(crxInput, pubkeyBytes);
-        byte[] signatureBytes = new byte[signatureLength];
-        ByteStreams.readFully(crxInput, signatureBytes);
-        BaseEncoding encoding = BaseEncoding.base64();
-        String pubkeyBase64 = encoding.encode(pubkeyBytes);
-        String signatureBase64 = encoding.encode(signatureBytes);
-        HashCode pubkeyHash = Hashing.sha256().hashBytes(pubkeyBytes);
-        String digest = pubkeyHash.toString().toLowerCase(Locale.ROOT);
-        StringBuilder idBuilder = new StringBuilder(ID_LEN);
-        translate(DIGEST_CHARS, CRX_ID_CHARS, digest, 0, ID_LEN, idBuilder);
-        String id = idBuilder.toString();
-        return new CrxMetadata(magicNumber, version, pubkeyLength, pubkeyBase64, signatureLength, signatureBase64, id);
+        return magicNumber;
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private static void translate(char[] from, char[] to, String source, int sourceStart, int sourceLen, StringBuilder sink) {
-        if (from.length != to.length) {
-            throw new IllegalArgumentException("arrays must be congruent");
+    @Override
+    public CrxMetadata parseMetadata(InputStream crxInput) throws IOException {
+        String magicNumber = readMagicNumber(crxInput);
+        checkMagicNumber(magicNumber);
+        LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
+        int version = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
+        CrxInterpreter interpreter = getCrxInterpreter(magicNumber, version);
+        PostVersionMetadata postVersionMetadata = interpreter.parseMetadataAfterVersion(crxInput, in);
+        CrxMetadata metadata = new CrxMetadata(magicNumber, version, postVersionMetadata.pubkeyLength, postVersionMetadata.pubkeyBase64, postVersionMetadata.signatureLength, postVersionMetadata.signatureBase64, postVersionMetadata.id);
+        return metadata;
+    }
+
+    protected CrxInterpreter getCrxInterpreter(@SuppressWarnings("unused") String magicNumber, int version) throws CrxInterpreter.UnsupportedCrxVersionException {
+        switch (version) {
+            case 2:
+                return new Crx2Interpreter();
+            case 3:
+                return new Crx3Interpreter();
+            default:
+                throw new CrxInterpreter.UnsupportedCrxVersionException("version " + version + " is not supported");
         }
-        for (int i = sourceStart; i < (sourceStart + sourceLen); i++) {
-            char untranslated = source.charAt(i);
-            int fromIndex = Arrays.binarySearch(from, untranslated);
-            char translated = untranslated;
-            if (fromIndex >= 0) {
-                translated = to[fromIndex];
+    }
+
+    protected interface CrxInterpreter {
+
+        PostVersionMetadata parseMetadataAfterVersion(InputStream crxInput, LittleEndianDataInputStream in) throws IOException;
+
+        class UnsupportedCrxVersionException extends CrxParsingException {
+
+            public UnsupportedCrxVersionException(String message) {
+                super(message);
             }
-            sink.append(translated);
         }
+    }
+
+    protected void a() {
     }
 
     static BasicCrxParser getDefaultInstance() {

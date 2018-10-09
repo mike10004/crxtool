@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -38,13 +39,9 @@ public class BasicCrxParserTest {
 
     @Test
     public void parseMetadata() throws Exception {
-        BasicCrxParser parser = new BasicCrxParser();
-        CrxMetadata metadata;
-        Unzippage unzippage;
-        try (InputStream in = Tests.getMakePageRedCrxResource().openStream()) {
-            metadata = parser.parseMetadata(in);
-            unzippage = Unzippage.unzip(in);
-        }
+        ParsedCrx parsedCrx = parse(Resources.asByteSource(Tests.getMakePageRedCrxResource()));
+        CrxMetadata metadata = parsedCrx.metadata;
+        Unzippage unzippage = parsedCrx.unzippage;
         System.out.format("headerLength=%s%nid=%s%npubkey=%s%nsignature=%s%n", metadata.headerLength(), metadata.id, metadata.pubkeyBase64, metadata.signatureBase64);
         assertEquals("id", "dnogaomdbgfngjgalaoggcfahgeibfdc", metadata.id);
         unzippage.allEntries().forEach(entry -> {
@@ -58,6 +55,27 @@ public class BasicCrxParserTest {
             byte[] expectedBytes = Resources.toByteArray(reference);
             assertEqualsAsTextFiles("file bytes", expectedBytes, actualBytes, StandardCharsets.UTF_8);
         }
+    }
+
+    private static class ParsedCrx {
+        public final CrxMetadata metadata;
+        public final Unzippage unzippage;
+
+        private ParsedCrx(CrxMetadata metadata, Unzippage unzippage) {
+            this.metadata = metadata;
+            this.unzippage = unzippage;
+        }
+    }
+
+    private ParsedCrx parse(ByteSource crxSource) throws IOException {
+        BasicCrxParser parser = new BasicCrxParser();
+        CrxMetadata metadata;
+        Unzippage unzippage;
+        try (InputStream in = crxSource.openStream()) {
+            metadata = parser.parseMetadata(in);
+            unzippage = Unzippage.unzip(in);
+        }
+        return new ParsedCrx(metadata, unzippage);
     }
 
     /*
@@ -108,15 +126,17 @@ public class BasicCrxParserTest {
         }
     }
 
+    private static final String MAGIC_NUMBER_ASCII = "Cr24";
+
     @Test(expected = EOFException.class)
     public void parseMetadata_prematureEof() throws Exception {
-        byte[] bytes = "Cr24".getBytes(StandardCharsets.US_ASCII);
+        byte[] bytes = MAGIC_NUMBER_ASCII.getBytes(StandardCharsets.US_ASCII);
         new BasicCrxParser().parseMetadata(new ByteArrayInputStream(bytes));
     }
 
     @Test(expected = CrxParsingException.class)
     public void parseMetadata_blankAfterMagicNumber() throws Exception {
-        byte[] magic = "Cr24".getBytes(StandardCharsets.US_ASCII);
+        byte[] magic = MAGIC_NUMBER_ASCII.getBytes(StandardCharsets.US_ASCII);
         byte[] bytes = new byte[10 * 1024];
         System.arraycopy(magic, 0, bytes, 0, magic.length);
         CrxMetadata md = new BasicCrxParser().parseMetadata(new ByteArrayInputStream(bytes));
@@ -140,4 +160,29 @@ public class BasicCrxParserTest {
         return zipFile;
     }
 
+    @Test
+    public void parseCrx3() throws Exception {
+        testParseCrx("crx3", MAGIC_NUMBER_ASCII);
+    }
+
+    @Test
+    public void parseCrx2() throws Exception {
+        testParseCrx("crx2", MAGIC_NUMBER_ASCII);
+    }
+
+    private void testParseCrx(String filenameExtension, String expectedMagicNumber) throws IOException {
+        String resourcePath = "/page-timer-1.7.0.0." + filenameExtension;
+        URL resource = getClass().getResource(resourcePath);
+        checkArgument(resource != null, "not found: classpath:%s", resourcePath);
+        String magicNumber;
+        try (InputStream crxInput = resource.openStream()) {
+            magicNumber = new BasicCrxParser().readMagicNumber(crxInput);
+        }
+        System.out.format("magic number %s from %s%n", magicNumber, resource);
+        assertEquals("expected magic number", expectedMagicNumber, magicNumber);
+        ParsedCrx parsed = parse(Resources.asByteSource(resource));
+        System.out.format("magic number %s from %s%n", parsed.metadata.magicNumber, parsed.metadata);
+        assertNotNull(parsed.metadata); // we mostly just care that this doesn't throw an exception
+        assertEquals("expected magic number", expectedMagicNumber, parsed.metadata.magicNumber);
+    }
 }
