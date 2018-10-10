@@ -10,7 +10,7 @@ import static java.util.Objects.requireNonNull;
  * <p>Warning: an interface with the same methods will replace this class in a
  * future version. This change will be source-compatible with clients that use
  * only the methods. It will not be binary-compatible with anything.</p>
- * <h5>Version 2 (https://web.archive.org/web/20180114090616/https://developer.chrome.com/extensions/crx)</h5>
+ * <p><b>Version 2</b> (https://web.archive.org/web/20180114090616/https://developer.chrome.com/extensions/crx)
  * <pre>
  * Field              Type            Length          Value           Description
  * magic number       char[]          32 bits         Cr24            Chrome requires this constant at the beginning of every .crx package.
@@ -20,13 +20,15 @@ import static java.util.Objects.requireNonNull;
  * public key         byte[]          pubkey.length   pubkey.contents The contents of the author's RSA public key, formatted as an X509 SubjectPublicKeyInfo block.
  * signature          byte[]          sig.length      sig.contents    The signature of the ZIP content using the author's private key. The signature is created using the RSA algorithm with the SHA-1 hash function.
  * </pre>
- * <h5>Version 3 (https://cs.chromium.org/chromium/src/components/crx_file/crx3.proto)</h5>
- * // A CRX₃ file is a binary file of the following format:
- * // [4 octets]: "Cr24", a magic number.
- * // [4 octets]: The version of the *.crx file format used (currently 3).
- * // [4 octets]: N, little-endian, the length of the header section.
- * // [N octets]: The header (the binary encoding of a CrxFileHeader).
- * // [M octets]: The ZIP archive.
+ * <p><b>Version 3</b> (https://cs.chromium.org/chromium/src/components/crx_file/crx3.proto)
+ * <pre>
+ * A CRX₃ file is a binary file of the following format:
+ *     [4 octets]: "Cr24", a magic number.
+ *     [4 octets]: The version of the *.crx file format used (currently 3).
+ *     [4 octets]: N, little-endian, the length of the header section.
+ *     [N octets]: The header (the binary encoding of a CrxFileHeader).
+ *     [M octets]: The ZIP archive.
+ * </pre>
  */
 @SuppressWarnings("deprecation")
 public final class CrxMetadata {
@@ -153,6 +155,7 @@ public final class CrxMetadata {
 
     /**
      * Extension ID, as computed from the public key.
+     * @return the id
      */
     public String getId() {
         return id;
@@ -160,6 +163,7 @@ public final class CrxMetadata {
 
     /**
      * Magic number of the file.
+     * @return the magic number
      */
     public String getMagicNumber() {
         return magicNumber;
@@ -167,6 +171,7 @@ public final class CrxMetadata {
 
     /**
      * Version of the CRX file format used.
+     * @return the version
      */
     public int getVersion() {
         return version;
