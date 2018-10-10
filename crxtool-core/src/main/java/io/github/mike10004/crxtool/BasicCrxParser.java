@@ -1,7 +1,5 @@
 package io.github.mike10004.crxtool;
 
-import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -11,8 +9,6 @@ import com.google.common.primitives.UnsignedInteger;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Locale;
 
 /**
  * Basic implementation of a Chrome extension parser.
@@ -54,17 +50,16 @@ public class BasicCrxParser implements CrxParser {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
         int version = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         CrxInterpreter interpreter = getCrxInterpreter(magicNumber, version);
-        PostVersionMetadata postVersionMetadata = interpreter.parseMetadataAfterVersion(crxInput, in);
-        CrxMetadata metadata = new CrxMetadata(magicNumber, version, postVersionMetadata.pubkeyLength, postVersionMetadata.pubkeyBase64, postVersionMetadata.signatureLength, postVersionMetadata.signatureBase64, postVersionMetadata.id);
+        CrxMetadata metadata = interpreter.parseMetadataAfterVersion(crxInput);
         return metadata;
     }
 
     protected CrxInterpreter getCrxInterpreter(@SuppressWarnings("unused") String magicNumber, int version) throws CrxInterpreter.UnsupportedCrxVersionException {
         switch (version) {
             case 2:
-                return new Crx2Interpreter();
+                return new Crx2Interpreter(magicNumber, version);
             case 3:
-                return new Crx3Interpreter();
+                return new Crx3Interpreter(magicNumber, version);
             default:
                 throw new CrxInterpreter.UnsupportedCrxVersionException("version " + version + " is not supported");
         }
@@ -72,7 +67,7 @@ public class BasicCrxParser implements CrxParser {
 
     protected interface CrxInterpreter {
 
-        PostVersionMetadata parseMetadataAfterVersion(InputStream crxInput, LittleEndianDataInputStream in) throws IOException;
+        CrxMetadata parseMetadataAfterVersion(InputStream crxInput) throws IOException;
 
         class UnsupportedCrxVersionException extends CrxParsingException {
 
