@@ -42,8 +42,8 @@ public class BasicCrxParserTest {
         ParsedCrx parsedCrx = parse(Resources.asByteSource(Tests.getMakePageRedCrxResource()));
         CrxMetadata metadata = parsedCrx.metadata;
         Unzippage unzippage = parsedCrx.unzippage;
-        System.out.format("headerLength=%s%nid=%s%npubkey=%s%nsignature=%s%n", metadata.getFileHeader().length(), metadata.id, metadata.pubkeyBase64, metadata.signatureBase64);
-        assertEquals("id", "dnogaomdbgfngjgalaoggcfahgeibfdc", metadata.id);
+        System.out.format("headerLength=%s%nid=%s%npubkey=%s%nsignature=%s%n", metadata.getFileHeader().length(), metadata.getId(), metadata.pubkeyBase64, metadata.signatureBase64);
+        assertEquals("id", "dnogaomdbgfngjgalaoggcfahgeibfdc", metadata.getId());
         unzippage.allEntries().forEach(entry -> {
             System.out.format("%s%n", entry);
         });
@@ -182,8 +182,8 @@ public class BasicCrxParserTest {
         System.out.format("magic number %s from %s%n", magicNumber, resource);
         assertEquals("expected magic number", expectedMagicNumber, magicNumber);
         ParsedCrx parsed = parse(Resources.asByteSource(resource));
-        System.out.format("id %s from %s%n", parsed.metadata.id, parsed.metadata);
+        System.out.format("id %s from %s%n", parsed.metadata.getId(), parsed.metadata);
         assertNotNull(parsed.metadata); // we mostly just care that this doesn't throw an exception
-        assertEquals("expected magic number", expectedMagicNumber, parsed.metadata.magicNumber);
+        assertEquals("expected magic number", expectedMagicNumber, parsed.metadata.getMagicNumber());
     }
 }

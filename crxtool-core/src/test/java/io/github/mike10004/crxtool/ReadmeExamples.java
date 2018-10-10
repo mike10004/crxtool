@@ -12,7 +12,7 @@ public class ReadmeExamples {
     public static void main(String[] args) throws Exception {
         try (InputStream in = new FileInputStream("my_extension.crx")) {
             CrxMetadata metadata = CrxParser.getDefault().parseMetadata(in);
-            System.out.println("id = " + metadata.id);
+            System.out.println("id = " + metadata.getId());
             // read the remainder of the stream into a byte array containing zipped data
             byte[] zipBytes = com.google.common.io.ByteStreams.toByteArray(in);
             // ...

@@ -49,8 +49,8 @@ public class BasicCrxPackerTest {
         }
         CrxMetadata actualMetadata = readMetadata(extensionFile);
         CrxMetadata expectedMetadata = readMetadata(referenceCrxFile);
-        assertEquals("magic number", expectedMetadata.magicNumber, actualMetadata.magicNumber);
-        assertEquals("version", expectedMetadata.version, actualMetadata.version);
+        assertEquals("magic number", expectedMetadata.getMagicNumber(), actualMetadata.getMagicNumber());
+        assertEquals("version", expectedMetadata.getVersion(), actualMetadata.getVersion());
         assertEquals("pubkey.length", expectedMetadata.pubkeyLength, actualMetadata.pubkeyLength);
         assertEquals("sig.length", expectedMetadata.signatureLength, actualMetadata.signatureLength);
         assertEquals("pubkey", expectedMetadata.pubkeyBase64, actualMetadata.pubkeyBase64);

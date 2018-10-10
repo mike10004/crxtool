@@ -120,7 +120,7 @@ public class PackExtensionMojoTest {
         try (InputStream in = new FileInputStream(outputFile)) {
             metadata = CrxParser.getDefault().parseMetadata(in);
         }
-        assertEquals("metadata", "Cr24", metadata.magicNumber);
+        assertEquals("metadata", "Cr24", metadata.getMagicNumber());
     }
 
     private void checkZipDataInCrxFile(File crxFile) throws IOException {

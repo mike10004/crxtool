@@ -6,6 +6,10 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Class representing Chrome extension metadata.
+ *
+ * <p>Warning: an interface with the same methods will replace this class in a
+ * future version. This change will be source-compatible with clients that use
+ * only the methods. It will not be binary-compatible with anything.</p>
  * <h5>Version 2 (https://web.archive.org/web/20180114090616/https://developer.chrome.com/extensions/crx)</h5>
  * <pre>
  * Field              Type            Length          Value           Description
@@ -28,18 +32,21 @@ import static java.util.Objects.requireNonNull;
 public final class CrxMetadata {
 
     /**
-     * Extension ID, as computed from the public key.
+     * @deprecated use {@link #getId()}; an interface of the same name will replace this class in a future version
      */
+    @Deprecated
     public final String id;
 
     /**
-     * Magic number of the file type.
+     * @deprecated use {@link #getMagicNumber()}; an interface of the same name will replace this class in a future version
      */
+    @Deprecated
     public final String magicNumber;
 
     /**
-     * Version of the CRX file format used.
+     * @deprecated use {@link #getVersion()}; an interface of the same name will replace this class in a future version
      */
+    @Deprecated
     public final int version;
 
     /**
@@ -109,38 +116,59 @@ public final class CrxMetadata {
 
         CrxMetadata that = (CrxMetadata) o;
 
-        if (version != that.version) return false;
+        if (getVersion() != that.getVersion()) return false;
         if (pubkeyLength != that.pubkeyLength) return false;
         if (signatureLength != that.signatureLength) return false;
-        if (magicNumber != null ? !magicNumber.equals(that.magicNumber) : that.magicNumber != null) return false;
+        if (getMagicNumber() != null ? !getMagicNumber().equals(that.getMagicNumber()) : that.getMagicNumber() != null) return false;
         if (pubkeyBase64 != null ? !pubkeyBase64.equals(that.pubkeyBase64) : that.pubkeyBase64 != null) return false;
         if (signatureBase64 != null ? !signatureBase64.equals(that.signatureBase64) : that.signatureBase64 != null)
             return false;
-        return id != null ? id.equals(that.id) : that.id == null;
+        return getId() != null ? getId().equals(that.getId()) : that.getId() == null;
     }
 
     @Override
     public int hashCode() {
-        int result = magicNumber != null ? magicNumber.hashCode() : 0;
-        result = 31 * result + version;
+        int result = getMagicNumber() != null ? getMagicNumber().hashCode() : 0;
+        result = 31 * result + getVersion();
         result = 31 * result + pubkeyLength;
         result = 31 * result + (pubkeyBase64 != null ? pubkeyBase64.hashCode() : 0);
         result = 31 * result + signatureLength;
         result = 31 * result + (signatureBase64 != null ? signatureBase64.hashCode() : 0);
-        result = 31 * result + (id != null ? id.hashCode() : 0);
+        result = 31 * result + (getId() != null ? getId().hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "CrxMetadata{" +
-                "id='" + id + '\'' +
-                ", magicNumber='" + magicNumber + '\'' +
-                ", version=" + version +
+                "id='" + getId() + '\'' +
+                ", magicNumber='" + getMagicNumber() + '\'' +
+                ", version=" + getVersion() +
                 ", pubkeyLength=" + pubkeyLength +
                 ", pubkeyBase64='" + CommonsLang3StringUtils.abbreviate(pubkeyBase64, 16) + '\'' +
                 ", signatureLength=" + signatureLength +
                 ", signatureBase64='" + CommonsLang3StringUtils.abbreviate(signatureBase64, 16) + '\'' +
                 '}';
+    }
+
+    /**
+     * Extension ID, as computed from the public key.
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Magic number of the file.
+     */
+    public String getMagicNumber() {
+        return magicNumber;
+    }
+
+    /**
+     * Version of the CRX file format used.
+     */
+    public int getVersion() {
+        return version;
     }
 }
