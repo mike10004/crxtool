@@ -3,8 +3,6 @@ package io.github.mike10004.crxtool;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
-import com.google.common.primitives.Ints;
-import com.google.common.primitives.Longs;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -23,11 +21,10 @@ import java.security.spec.RSAPublicKeySpec;
 
 /**
  * Static utility methods relating to key pairs.
+ *
+ * <p>This class is public because it is used by the Maven plugin.
  */
-class KeyPairs {
-
-    public static final String ALGORITHM_SHA256_WITH_RSA = "sha256_with_rsa";
-    static final String ALGORITHM_SHA256_WITH_ECDSA = "sha256_with_ecdsa";
+public class KeyPairs {
 
     private KeyPairs() {}
 
@@ -64,7 +61,7 @@ class KeyPairs {
         return keyGen.generateKeyPair();
     }
 
-    public static long countBase64EncodedBytes(String base64) {
+    static long countBase64EncodedBytes(String base64) {
         long len;
         try (StringReader reader = new StringReader(base64)) {
             len = ByteStreams.copy(BaseEncoding.base64().decodingStream(reader), ByteStreams.nullOutputStream());

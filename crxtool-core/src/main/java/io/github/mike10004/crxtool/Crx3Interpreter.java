@@ -36,7 +36,7 @@ class Crx3Interpreter extends CrxInterpreterBase {
         System.out.format("header:%n%n%s%n%n", BASE_64.encode(headerBytes));
         Crx3.CrxFileHeader parsedHeader = Crx3.CrxFileHeader.parseFrom(headerBytes);
         CrxFileHeader fileHeader = new MessageFileHeader(parsedHeader);
-        AsymmetricKeyProof rsaProof = fileHeader.getAsymmetricKeyProofs(KeyPairs.ALGORITHM_SHA256_WITH_RSA).stream().findFirst().orElse(null);
+        AsymmetricKeyProof rsaProof = fileHeader.getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).stream().findFirst().orElse(null);
         if (rsaProof == null) {
             throw new CrxParser.CrxParsingException("header does not contain sha256_with_rsa asymmetric key proof");
         }

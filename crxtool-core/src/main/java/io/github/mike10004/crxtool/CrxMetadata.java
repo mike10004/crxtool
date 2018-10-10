@@ -85,7 +85,7 @@ public final class CrxMetadata {
         this.fileHeader = requireNonNull(fileHeader);
         this.id = requireNonNull(id);
         // legacy: pubkey/signature fields refer to CRX2 sha256_with_rsa proof
-        AsymmetricKeyProof asymmetricKeyProof = fileHeader.getAsymmetricKeyProofs(KeyPairs.ALGORITHM_SHA256_WITH_RSA).stream().findFirst().orElseThrow(() -> new IllegalArgumentException("file header does not contain sha256_with_rsa asymmetric key proof"));
+        AsymmetricKeyProof asymmetricKeyProof = fileHeader.getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).stream().findFirst().orElseThrow(() -> new IllegalArgumentException("file header does not contain sha256_with_rsa asymmetric key proof"));
         this.pubkeyLength = asymmetricKeyProof.getPublicKeyLength();
         this.pubkeyBase64 = asymmetricKeyProof.getPublicKeyBase64();
         this.signatureLength = asymmetricKeyProof.getSignatureLength();
@@ -102,7 +102,7 @@ public final class CrxMetadata {
     }
 
     private static CrxFileHeader createCrx2FileHeader(String pubkeyBase64, String signatureBase64) {
-        return new MapFileHeader(ImmutableMultimap.of(KeyPairs.ALGORITHM_SHA256_WITH_RSA, createCrx2Proof(pubkeyBase64, signatureBase64)));
+        return new MapFileHeader(ImmutableMultimap.of(MapFileHeader.ALGORITHM_SHA256_WITH_RSA, createCrx2Proof(pubkeyBase64, signatureBase64)));
     }
 
     private static AsymmetricKeyProof createCrx2Proof(String pubkeyBase64, String signatureBase64) {

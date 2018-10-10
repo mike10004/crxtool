@@ -19,9 +19,9 @@ class MessageFileHeader implements CrxFileHeader {
     @Override
     public List<AsymmetricKeyProof> getAsymmetricKeyProofs(String algorithm) {
         switch (algorithm) {
-            case KeyPairs.ALGORITHM_SHA256_WITH_ECDSA:
+            case MapFileHeader.ALGORITHM_SHA256_WITH_ECDSA:
                 return message.getSha256WithEcdsaList().stream().map(this::convert).collect(ImmutableList.toImmutableList());
-            case KeyPairs.ALGORITHM_SHA256_WITH_RSA:
+            case MapFileHeader.ALGORITHM_SHA256_WITH_RSA:
                 return message.getSha256WithRsaList().stream().map(this::convert).collect(ImmutableList.toImmutableList());
             default:
                 return Collections.emptyList();

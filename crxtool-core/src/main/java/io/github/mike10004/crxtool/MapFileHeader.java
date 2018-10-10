@@ -9,6 +9,9 @@ import java.util.Objects;
 
 class MapFileHeader implements CrxFileHeader {
 
+    public static final String ALGORITHM_SHA256_WITH_RSA = "sha256_with_rsa";
+    public static final String ALGORITHM_SHA256_WITH_ECDSA = "sha256_with_ecdsa";
+    
     protected final ImmutableMultimap<String, AsymmetricKeyProof> proofs;
 
     MapFileHeader(Multimap<String, AsymmetricKeyProof> proofs) {
