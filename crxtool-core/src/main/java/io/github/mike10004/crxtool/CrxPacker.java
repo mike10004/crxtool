@@ -66,6 +66,20 @@ public interface CrxPacker {
      * @return a default instance
      */
     static CrxPacker getDefault() {
-        return BasicCrxPacker.getDefaultInstance();
+        return getPackerInstance(Crx2Packer.FORMAT_VERSION);
+    }
+
+    /**
+     * Gets a packer that packs in the specified version.
+     * @param version the version
+     * @return the packer
+     */
+    static CrxPacker getPackerInstance(int version) {
+        switch (version) {
+            case Crx2Packer.FORMAT_VERSION:
+                return Crx2Packer.getDefaultInstance();
+            default:
+                throw new IllegalArgumentException(String.format("only version 2 is supported, not %s", version));
+        }
     }
 }
