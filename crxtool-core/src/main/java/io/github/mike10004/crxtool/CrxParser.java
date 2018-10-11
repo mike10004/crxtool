@@ -12,30 +12,52 @@ import java.io.InputStream;
 public interface CrxParser {
 
     /**
-     * Parses the extension metadata from an input stream providing bytes
-     * of an extension file.
+     * Parses the extension metadata from an input stream providing bytes of an extension file.
+     * The input stream should be positioned at the first byte of the file. Upon completion,
+     * the input strema will be positioned at the beginning of the portion of the file that
+     * constitutes a zip archive. That is, the remainder of the stream can be parsed with a
+     * {@link java.util.zip.ZipInputStream}.
+     *
      * @param crxInputStream the input stream
      * @return the metadata
      * @throws IOException if reading from the stream fails
      */
     CrxMetadata parseMetadata(InputStream crxInputStream) throws IOException;
 
+    /**
+     * Gets a default (immutable) parser instance.
+     * @return a parser
+     */
     static CrxParser getDefault() {
         return BasicCrxParser.getDefaultInstance();
     }
 
+    /**
+     * Exception thrown if parsing a CRX fails.
+     */
     @SuppressWarnings("unused")
     class CrxParsingException extends IOException {
+
+        /**
+         * @inheritDoc
+         */
         public CrxParsingException(String message) {
             super(message);
         }
 
+        /**
+         * @inheritDoc
+         */
         public CrxParsingException(String message, Throwable cause) {
             super(message, cause);
         }
 
+        /**
+         * @inheritDoc
+         */
         public CrxParsingException(Throwable cause) {
             super(cause);
         }
+
     }
 }
