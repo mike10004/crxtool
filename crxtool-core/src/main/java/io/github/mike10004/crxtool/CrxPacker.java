@@ -62,7 +62,8 @@ public interface CrxPacker {
     void packExtension(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException;
 
     /**
-     * Gets a default instance.
+     * Gets a default instance. This currently returns a packer that packs
+     * a version 2 CRX, but that may change in a future release.
      * @return a default instance
      */
     static CrxPacker getDefault() {
@@ -71,6 +72,7 @@ public interface CrxPacker {
 
     /**
      * Gets a packer that packs in the specified version.
+     * Only version 2 is currently supported.
      * @param version the version
      * @return the packer
      */
