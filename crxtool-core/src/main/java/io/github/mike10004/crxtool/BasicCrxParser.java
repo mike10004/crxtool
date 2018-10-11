@@ -56,7 +56,7 @@ public class BasicCrxParser implements CrxParser {
 
     protected CrxInterpreter getCrxInterpreter(@SuppressWarnings("unused") String magicNumber, int version) throws CrxInterpreter.UnsupportedCrxVersionException {
         switch (version) {
-            case 2:
+            case Crx2Packer.FORMAT_VERSION:
                 return new Crx2Interpreter(magicNumber, version);
             case 3:
                 return new Crx3Interpreter(magicNumber, version);

@@ -81,7 +81,7 @@ public class BasicCrxPacker_WebDriverTest {
         Path extensionDir = Tests.getAddFooterExtensionDir();
         File extensionFile = File.createTempFile("BasicCrxPacker_WebDriverTest", ".crx");
         try (OutputStream output = new FileOutputStream(extensionFile)) {
-            new BasicCrxPacker().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
+            new Crx2Packer().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
         }
         return extensionFile;
     }

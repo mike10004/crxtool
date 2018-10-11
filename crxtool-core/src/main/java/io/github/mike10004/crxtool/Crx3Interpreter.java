@@ -44,7 +44,7 @@ class Crx3Interpreter extends CrxInterpreterBase {
         StringBuilder idBuilder = new StringBuilder(ID_LEN);
         translateDigestToId(digest, 0, ID_LEN, idBuilder);
         String id = idBuilder.toString();
-        return new CrxMetadata(magicNumber, version, fileHeader, id);
+        return new BufferedCrxMetadata(magicNumber, version, fileHeader, id);
     }
 
     @SuppressWarnings("SameParameterValue")

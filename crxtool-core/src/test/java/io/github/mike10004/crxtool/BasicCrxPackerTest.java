@@ -41,7 +41,7 @@ public class BasicCrxPackerTest {
         File referenceCrxFile = new File(Tests.getMakePageRedCrxResource().toURI());
         File extensionZipFile = Tests.chopZipFromCrx(referenceCrxFile);
         ByteSource extensionZip = Files.asByteSource(extensionZipFile);
-        BasicCrxPacker packer = new BasicCrxPacker();
+        Crx2Packer packer = new Crx2Packer();
         KeyPair keyPair = KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(TestKey.getPrivateKeyBytes());
         File extensionFile = File.createTempFile("crxtool-unit-test", ".crx");
         try (OutputStream outputStream = new FileOutputStream(extensionFile)) {
@@ -51,10 +51,12 @@ public class BasicCrxPackerTest {
         CrxMetadata expectedMetadata = readMetadata(referenceCrxFile);
         assertEquals("magic number", expectedMetadata.getMagicNumber(), actualMetadata.getMagicNumber());
         assertEquals("version", expectedMetadata.getVersion(), actualMetadata.getVersion());
-        assertEquals("pubkey.length", expectedMetadata.pubkeyLength, actualMetadata.pubkeyLength);
-        assertEquals("sig.length", expectedMetadata.signatureLength, actualMetadata.signatureLength);
-        assertEquals("pubkey", expectedMetadata.pubkeyBase64, actualMetadata.pubkeyBase64);
-        assertEquals("sig", expectedMetadata.signatureBase64, actualMetadata.signatureBase64);
+        AsymmetricKeyProof expectedProof = expectedMetadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
+        AsymmetricKeyProof actualProof = actualMetadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
+        assertEquals("pubkey.length", expectedProof.getPublicKeyLength(), actualProof.getPublicKeyLength());
+        assertEquals("sig.length", expectedProof.getSignatureLength(), actualProof.getSignatureLength());
+        assertEquals("pubkey", expectedProof.getPublicKeyBase64(), actualProof.getPublicKeyBase64());
+        assertEquals("sig", expectedProof.getSignatureBase64(), actualProof.getSignatureBase64());
         assertTrue("crx bytes", Files.asByteSource(referenceCrxFile).contentEquals(Files.asByteSource(extensionFile)));
     }
 
@@ -64,7 +66,7 @@ public class BasicCrxPackerTest {
         File crxFile = File.createTempFile("BasicCrxPackerTest", ".crx", temporaryFolder.getRoot());
         ZipConfig zipConfig = new ZipConfig(null, null, "This is my comment");
         try (OutputStream output = new FileOutputStream(crxFile)) {
-            new BasicCrxPacker().packExtension(extensionDir, zipConfig, Tests.generateRsaKeyPair(getClass().hashCode()), output);
+            new Crx2Packer().packExtension(extensionDir, zipConfig, Tests.generateRsaKeyPair(getClass().hashCode()), output);
         }
         String magic = readMagicNumber(crxFile, 4);
         checkState("Cr24".equals(magic), "magic number incorrect: %s", magic);
@@ -81,7 +83,7 @@ public class BasicCrxPackerTest {
         assertEquals("zip comment", zipConfig.comment, actualComment);
     }
 
-    private static String readMagicNumber(File file, int length) throws IOException {
+    private static String readMagicNumber(File file, @SuppressWarnings("SameParameterValue") int length) throws IOException {
         checkArgument(length > 0 && length <= 4, "magic number length invalid: %s", length);
         byte[] bytes = Files.asByteSource(file).slice(0, length).read();
         return StandardCharsets.US_ASCII.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
@@ -92,7 +94,7 @@ public class BasicCrxPackerTest {
         Path extensionDir = Tests.getAddFooterExtensionDir();
         File crxFile = File.createTempFile("BasicCrxPackerTest", ".crx");
         try (OutputStream output = new FileOutputStream(crxFile)) {
-            new BasicCrxPacker().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
+            new Crx2Packer().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
         }
         String magic = readMagicNumber(crxFile, 4);
         checkState("Cr24".equals(magic), "magic number incorrect: %s", magic);
@@ -120,7 +122,7 @@ public class BasicCrxPackerTest {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(32);
         CountingOutputStream counter = new CountingOutputStream(buffer);
         LittleEndianDataOutputStream output = new LittleEndianDataOutputStream(counter);
-        new BasicCrxPacker().writeFormatVersion(output);
+        new Crx2Packer().writeFormatVersion(output);
         output.flush();
         long count = counter.getCount();
         assertEquals("byte count", 4, count);
@@ -138,11 +140,12 @@ public class BasicCrxPackerTest {
         byte[] signature = new byte[2048];
         random.nextBytes(signature);
         ByteArrayOutputStream baos = new ByteArrayOutputStream(4096);
-        new BasicCrxPacker().writeExtensionHeader(publicKeyBytes, signature, baos);
+        new Crx2Packer().writeExtensionHeader(publicKeyBytes, signature, baos);
         baos.flush();
         byte[] headerBytes = baos.toByteArray();
         CrxMetadata metadata = CrxParser.getDefault().parseMetadata(new ByteArrayInputStream(headerBytes));
-        assertEquals("pubkey length", publicKeyBytes.length, metadata.pubkeyLength);
-        assertEquals("sig length", signature.length, metadata.signatureLength);
+        AsymmetricKeyProof proof = metadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
+        assertEquals("pubkey length", publicKeyBytes.length, proof.getPublicKeyLength());
+        assertEquals("sig length", signature.length, proof.getSignatureLength());
     }
 }

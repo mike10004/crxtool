@@ -1,5 +1,6 @@
 package io.github.mike10004.crxtool;
 
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.hash.HashCode;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.LittleEndianDataInputStream;
@@ -41,7 +42,15 @@ class Crx2Interpreter extends CrxInterpreterBase {
         StringBuilder idBuilder = new StringBuilder(ID_LEN);
         translateDigestToId(digest, 0, ID_LEN, idBuilder);
         String id = idBuilder.toString();
-        return new CrxMetadata(magicNumber, version, pubkeyLength, pubkeyBase64, signatureLength, signatureBase64, id);
+        return new BufferedCrxMetadata(magicNumber, version, createCrx2FileHeader(pubkeyBase64, signatureBase64), id);
+    }
+
+    private static CrxFileHeader createCrx2FileHeader(String pubkeyBase64, String signatureBase64) {
+        return new MapFileHeader(ImmutableMultimap.of(MapFileHeader.ALGORITHM_SHA256_WITH_RSA, createCrx2Proof(pubkeyBase64, signatureBase64)));
+    }
+
+    private static AsymmetricKeyProof createCrx2Proof(String pubkeyBase64, String signatureBase64) {
+        return new BasicAsymmetricKeyProof(pubkeyBase64, signatureBase64);
     }
 
 }

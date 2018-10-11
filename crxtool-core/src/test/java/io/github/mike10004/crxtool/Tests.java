@@ -9,6 +9,7 @@ import com.google.common.primitives.Longs;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -208,4 +209,28 @@ public class Tests {
         return new DirDiff(referenceOnly, queryOnly, differents);
     }
 
+    public static MultiversionCrx getMultiversionCrxExample() {
+        return new MultiversionCrx();
+    }
+
+    public static class MultiversionCrx {
+
+        private static final String ID = "bpfnehkjjffiihnbadbgpfpmedcpojjl";
+
+        private MultiversionCrx() {}
+
+        public String getId() {
+            return ID;
+        }
+
+        public URL getResource(int version) throws IOException {
+            String resourcePath = String.format("/%s/example.crx%d", getId(), version);
+            URL resource = getClass().getResource(resourcePath);
+            if (resource == null) {
+                throw new FileNotFoundException("classpath:" + resourcePath);
+            }
+            return resource;
+        }
+
+    }
 }

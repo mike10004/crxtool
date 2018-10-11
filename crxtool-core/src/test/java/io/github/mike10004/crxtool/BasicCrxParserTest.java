@@ -41,7 +41,7 @@ public class BasicCrxParserTest {
         ParsedCrx parsedCrx = parse(Resources.asByteSource(Tests.getMakePageRedCrxResource()));
         CrxMetadata metadata = parsedCrx.metadata;
         Unzippage unzippage = parsedCrx.unzippage;
-        System.out.format("headerLength=%s%nid=%s%npubkey=%s%nsignature=%s%n", metadata.getFileHeader().length(), metadata.getId(), metadata.pubkeyBase64, metadata.signatureBase64);
+        System.out.format("headerLength=%s%nid=%s%n%n", metadata.getFileHeader().length(), metadata.getId());
         assertEquals("id", "dnogaomdbgfngjgalaoggcfahgeibfdc", metadata.getId());
         unzippage.allEntries().forEach(entry -> {
             System.out.format("%s%n", entry);
