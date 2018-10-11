@@ -33,7 +33,6 @@ class Crx3Interpreter extends CrxInterpreterBase {
         }
         byte[] headerBytes = new byte[headerLen];
         ByteStreams.readFully(crxInput, headerBytes);
-        System.out.format("header:%n%n%s%n%n", BASE_64.encode(headerBytes));
         Crx3.CrxFileHeader parsedHeader = Crx3.CrxFileHeader.parseFrom(headerBytes);
         CrxFileHeader fileHeader = new MessageFileHeader(parsedHeader);
         AsymmetricKeyProof rsaProof = fileHeader.getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).stream().findFirst().orElse(null);
@@ -48,6 +47,7 @@ class Crx3Interpreter extends CrxInterpreterBase {
         return new CrxMetadata(magicNumber, version, fileHeader, id);
     }
 
+    @SuppressWarnings("SameParameterValue")
     protected HashCode hashBase64(HashFunction hashFunction, String base64Data) throws IOException {
         return BASE_64.decodingSource(CharSource.wrap(base64Data)).hash(hashFunction);
     }
