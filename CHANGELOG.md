@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.11
+----
+
+* deprecate `CrxParser.CrxParsingException` in favor of top-level exception class
+* move `PemParser` to core module
+* fix typo in `KeyPairs.generateRsaKeyPair`
+* remove stray printing to stdout when parsing CRX3 files
+
 0.10
 ----
 
