@@ -3,6 +3,7 @@ package com.github.mike10004.crxtool.maven;
 import io.github.mike10004.crxtool.CrxPacker;
 import io.github.mike10004.crxtool.KeyPairs;
 import io.github.mike10004.crxtool.Zipping;
+import io.github.mike10004.crxtool.PemParser;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -81,11 +82,11 @@ public class PackExtensionMojo extends AbstractMojo {
             }
             if (privateKey_ == null || (isGenerateKeyIfAbsent() && !privateKey_.isFile())) {
                 getLog().debug("generating private key (specified key file is " + privateKey_ + ")");
-                keyPair = KeyPairs.generateRsKeyPair(createRandom());
+                keyPair = KeyPairs.generateRsaKeyPair(createRandom());
             } else {
                 byte[] keyBytes;
                 try (Reader reader = new InputStreamReader(new FileInputStream(privateKey_), StandardCharsets.US_ASCII)) {
-                    keyBytes = new PemParser().extractBytes(reader);
+                    keyBytes = PemParser.getInstance().extractBytes(reader);
                 }
                 keyPair = KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(keyBytes);
             }

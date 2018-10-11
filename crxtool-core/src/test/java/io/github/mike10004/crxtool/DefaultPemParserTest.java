@@ -1,4 +1,4 @@
-package com.github.mike10004.crxtool.maven;
+package io.github.mike10004.crxtool;
 
 import com.google.common.io.ByteProcessor;
 import com.google.common.io.ByteSource;
@@ -18,7 +18,7 @@ import java.util.zip.GZIPInputStream;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-public class PemParserTest {
+public class DefaultPemParserTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -30,7 +30,7 @@ public class PemParserTest {
         try (InputStream in = new GZIPInputStream(new FileInputStream(gzippedPemFile))) {
             Files.asByteSink(pemFile).writeFrom(in);
         }
-        PemParser parser = new PemParser();
+        PemParser parser = new DefaultPemParser();
         byte[] bytes;
         try (Reader reader = new InputStreamReader(new FileInputStream(pemFile), StandardCharsets.US_ASCII)) {
             bytes = parser.extractBytes(reader);

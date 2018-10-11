@@ -1,26 +1,32 @@
-package com.github.mike10004.crxtool.maven;
+package io.github.mike10004.crxtool;
 
 import com.google.common.io.BaseEncoding;
-import com.google.common.io.CharSource;
 import com.google.common.io.CharStreams;
 import com.google.common.io.LineProcessor;
 
 import java.io.IOException;
 import java.io.Reader;
 
-class PemParser {
+class DefaultPemParser implements PemParser {
+
+    private static final PemParser INSTANCE = new DefaultPemParser();
 
     public byte[] extractBytes(Reader reader) throws IOException {
         String base64 = CharStreams.readLines(reader, new Base64LineProcessor());
         return BaseEncoding.base64().decode(base64);
     }
 
-    static class Base64LineProcessor implements LineProcessor<String> {
+    public static PemParser getInstance() {
+        return INSTANCE;
+    }
+
+    private static class Base64LineProcessor implements LineProcessor<String> {
 
         private StringBuilder sb = new StringBuilder(4096 * 4 / 3);
 
+        @SuppressWarnings("NullableProblems")
         @Override
-        public boolean processLine(String line) throws IOException {
+        public boolean processLine(String line) {
             line = line.trim();
             if (!isMatchingCommentPattern(line)) {
                 sb.append(line);
@@ -38,4 +44,5 @@ class PemParser {
         }
 
     }
+
 }

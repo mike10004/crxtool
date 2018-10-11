@@ -45,7 +45,7 @@ public class PackExtensionMojoTest {
 
     @Test
     public void testExecute_crx_privateKey() throws Exception {
-        File pemFile = buildPemFile(KeyPairs.generateRsKeyPair(new SecureRandom()).getPrivate().getEncoded());
+        File pemFile = buildPemFile(KeyPairs.generateRsaKeyPair(new SecureRandom()).getPrivate().getEncoded());
         File crxFile = testExecute(false, pemFile, false);
         checkMetadata(crxFile);
         checkZipDataInCrxFile(crxFile);
