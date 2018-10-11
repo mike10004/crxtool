@@ -2,8 +2,6 @@ package io.github.mike10004.crxtool;
 
 import com.github.mike10004.xvfbtesting.XvfbRule;
 import io.github.bonigarcia.wdm.ChromeDriverManager;
-import io.github.bonigarcia.wdm.WebDriverManager;
-import io.github.mike10004.crxtool.testing.Chromedrivers;
 import io.github.mike10004.nanochamp.server.NanoControl;
 import io.github.mike10004.nanochamp.server.NanoResponse;
 import io.github.mike10004.nanochamp.server.NanoServer;
@@ -19,7 +17,6 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -38,12 +35,7 @@ public class BasicCrxPacker_WebDriverTest {
 
     @BeforeClass
     public static void configureChromedriver() {
-        @Nullable String chromedriverVersion = Chromedrivers.determineBestChromedriverVersion();
-        WebDriverManager m = ChromeDriverManager.getInstance();
-        if (chromedriverVersion != null) {
-            m.version(chromedriverVersion);
-        }
-        m.setup();
+        ChromeDriverManager.getInstance().setup();
     }
 
     @Test
