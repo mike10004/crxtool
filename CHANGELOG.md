@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.12
+----
+
+* breaking change: make `CrxMetadata `an interface instead of a class
+* breaking change: remove `BasicCrxPacker`; use `Crx2Packer` instead
+* exclude *crxtool-testing* artifact from deployment 
+
 0.11
 ----
 
