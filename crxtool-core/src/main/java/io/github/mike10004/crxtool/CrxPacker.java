@@ -14,7 +14,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 
 /**
- * Interface defining methods to pack Chrome extensions.
+ * Interface of a service that packs a Chrome extension from source files.
  */
 public interface CrxPacker {
 

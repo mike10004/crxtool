@@ -65,10 +65,22 @@ public class BasicCrxParser implements CrxParser {
         }
     }
 
+    /**
+     * Interface of a service that parses metadata from an input stream.
+     */
     protected interface CrxInterpreter {
 
+        /**
+         * Parses the metadata that follows the version entry in the packed binary file format.
+         * @param crxInput input stream positioned immediately after the version
+         * @return a metadata object
+         * @throws IOException if I/O fails
+         */
         CrxMetadata parseMetadataAfterVersion(InputStream crxInput) throws IOException;
 
+        /**
+         * Exception thrown if the version specified by a CRX file is not supported.
+         */
         class UnsupportedCrxVersionException extends io.github.mike10004.crxtool.CrxParsingException {
 
             public UnsupportedCrxVersionException(String message) {

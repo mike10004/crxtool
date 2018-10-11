@@ -1,7 +1,7 @@
 package io.github.mike10004.crxtool;
 
 /**
- * Class representing Chrome extension metadata.
+ * Interface that represents a set of Chrome extension metadata.
  *
  * <p><b>Version 2</b> (https://web.archive.org/web/20180114090616/https://developer.chrome.com/extensions/crx)
  * <pre>
