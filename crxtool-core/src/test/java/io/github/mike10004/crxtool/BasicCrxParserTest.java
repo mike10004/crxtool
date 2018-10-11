@@ -3,7 +3,6 @@ package io.github.mike10004.crxtool;
 import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
 import com.google.common.io.Resources;
-import io.github.mike10004.crxtool.CrxParser.CrxParsingException;
 import io.github.mike10004.crxtool.testing.Unzippage;
 import org.junit.Rule;
 import org.junit.Test;

@@ -22,13 +22,13 @@ public class BasicCrxParser implements CrxParser {
      */
     public BasicCrxParser() {}
 
-    private void checkMagicNumber(String magicNumber) throws CrxParsingException {
+    private void checkMagicNumber(String magicNumber) throws io.github.mike10004.crxtool.CrxParsingException {
         if (!"Cr24".equals(magicNumber)) {
             try {
                 byte[] magicNumberBytes = magicNumber.getBytes(StandardCharsets.US_ASCII);
-                throw new CrxParsingException("incorrect magic number: 0x" + BaseEncoding.base16().encode(magicNumberBytes));
+                throw new io.github.mike10004.crxtool.CrxParsingException("incorrect magic number: 0x" + BaseEncoding.base16().encode(magicNumberBytes));
             } catch (RuntimeException e) {
-                throw new CrxParsingException("incorrect magic number (unreportable)");
+                throw new io.github.mike10004.crxtool.CrxParsingException("incorrect magic number (unreportable)");
             }
 
         }
@@ -69,15 +69,12 @@ public class BasicCrxParser implements CrxParser {
 
         CrxMetadata parseMetadataAfterVersion(InputStream crxInput) throws IOException;
 
-        class UnsupportedCrxVersionException extends CrxParsingException {
+        class UnsupportedCrxVersionException extends io.github.mike10004.crxtool.CrxParsingException {
 
             public UnsupportedCrxVersionException(String message) {
                 super(message);
             }
         }
-    }
-
-    protected void a() {
     }
 
     static BasicCrxParser getDefaultInstance() {

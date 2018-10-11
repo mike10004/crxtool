@@ -34,26 +34,32 @@ public interface CrxParser {
 
     /**
      * Exception thrown if parsing a CRX fails.
+     * @deprecated use {@link io.github.mike10004.crxtool.CrxParsingException} instead
      */
     @SuppressWarnings("unused")
-    class CrxParsingException extends IOException {
+    @Deprecated
+    final class CrxParsingException extends io.github.mike10004.crxtool.CrxParsingException {
 
         /**
-         * @inheritDoc
+         * Constructs an instance.
+         * @param message the message
          */
         public CrxParsingException(String message) {
             super(message);
         }
 
         /**
-         * @inheritDoc
+         * Constructs an instance.
+         * @param message the message
+         * @param cause the cause
          */
         public CrxParsingException(String message, Throwable cause) {
             super(message, cause);
         }
 
         /**
-         * @inheritDoc
+         * Constructs an instance.
+         * @param cause the cause
          */
         public CrxParsingException(Throwable cause) {
             super(cause);

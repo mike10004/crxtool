@@ -29,7 +29,7 @@ class Crx3Interpreter extends CrxInterpreterBase {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
         int headerLen = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         if (headerLen <= 0 || headerLen > MAX_SANE_HEADER_LEN) {
-            throw new CrxParser.CrxParsingException(String.format("reported header length is insane: %s", headerLen));
+            throw new CrxParsingException(String.format("reported header length is insane: %s", headerLen));
         }
         byte[] headerBytes = new byte[headerLen];
         ByteStreams.readFully(crxInput, headerBytes);
@@ -37,7 +37,7 @@ class Crx3Interpreter extends CrxInterpreterBase {
         CrxFileHeader fileHeader = new MessageFileHeader(parsedHeader);
         AsymmetricKeyProof rsaProof = fileHeader.getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).stream().findFirst().orElse(null);
         if (rsaProof == null) {
-            throw new CrxParser.CrxParsingException("header does not contain sha256_with_rsa asymmetric key proof");
+            throw new CrxParsingException("header does not contain sha256_with_rsa asymmetric key proof");
         }
         HashCode pubkeyHash = hashBase64(SHA256, rsaProof.getPublicKeyBase64());
         String digest = pubkeyHash.toString().toLowerCase(Locale.ROOT);

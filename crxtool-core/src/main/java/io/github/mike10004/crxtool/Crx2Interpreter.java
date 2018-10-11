@@ -25,10 +25,10 @@ class Crx2Interpreter extends CrxInterpreterBase {
         int pubkeyLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         int signatureLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         if (pubkeyLength <= 0 || pubkeyLength > MAX_SANE_PUBKEY_LENGTH) {
-            throw new CrxParser.CrxParsingException(String.format("public key length is insane: %s", pubkeyLength));
+            throw new CrxParsingException(String.format("public key length is insane: %s", pubkeyLength));
         }
         if (signatureLength <= 0 || signatureLength > MAX_SANE_SIGNATURE_LENGTH) {
-            throw new CrxParser.CrxParsingException(String.format("signature length is insane: %s", signatureLength));
+            throw new CrxParsingException(String.format("signature length is insane: %s", signatureLength));
         }
         byte[] pubkeyBytes = new byte[pubkeyLength];
         ByteStreams.readFully(crxInput, pubkeyBytes);
