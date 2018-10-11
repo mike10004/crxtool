@@ -55,7 +55,7 @@ public class KeyPairs {
 
 
     // https://stackoverflow.com/a/24689684/2657036
-    public static KeyPair generateRsKeyPair(SecureRandom random) throws NoSuchAlgorithmException {
+    public static KeyPair generateRsaKeyPair(SecureRandom random) throws NoSuchAlgorithmException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(1024, random);
         return keyGen.generateKeyPair();

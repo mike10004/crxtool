@@ -81,7 +81,7 @@ public class Tests {
     public static KeyPair generateRsaKeyPair(long seed) throws NoSuchAlgorithmException {
         byte[] seedBytes = Longs.toByteArray(seed);
         SecureRandom random = new SecureRandom(seedBytes);
-        return KeyPairs.generateRsKeyPair(random);
+        return KeyPairs.generateRsaKeyPair(random);
     }
 
     public static class DirDiff {
