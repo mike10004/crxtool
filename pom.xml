@@ -146,7 +146,7 @@
                             <goal>jar</goal>
                         </goals>
                         <configuration>
-                            <excludePackageNames>io.github.mike10004.crxtool.message</excludePackageNames>
+                            <excludePackageNames>io.github.mike10004.crxtool.message,io.github.mike10004.crxtool.testing</excludePackageNames>
                         </configuration>
                     </execution>
                 </executions>
