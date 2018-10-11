@@ -6,7 +6,7 @@
 
     <groupId>com.github.mike10004</groupId>
     <artifactId>crxtool</artifactId>
-    <version>0.11</version>
+    <version>0.12-SNAPSHOT</version>
     <name>crxtool</name>
     <description>Chrome extension tools</description>
     <packaging>pom</packaging>
