@@ -1,7 +1,13 @@
 language: java
+jdk: openjdk11
 notifications:
   email: false
-before_install: true
-install: true
-before_script: dpkg-query -l google-chrome-stable chromium-browser || true
-script: mvn install -Dmaven.javadoc.skip=true -B -V -Dwdm.chromeDriverVersion=$CHROMEDRIVER_VERSION
+cache:
+  directories:
+    - $HOME/.m2
+before_install: dpkg-query -l google-chrome-stable chromium-browser || true
+install: mvn -B -V $MORE_MAVEN_OPTS dependency:go-offline
+before_script: true
+script:
+  - mvn -B -V $MORE_MAVEN_OPTS -Dwdm.chromeDriverVersion=$CHROMEDRIVER_VERSION install
+  - mvn -B -V javadoc:javadoc
