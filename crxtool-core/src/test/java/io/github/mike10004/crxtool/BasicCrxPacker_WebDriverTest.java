@@ -2,6 +2,7 @@ package io.github.mike10004.crxtool;
 
 import com.github.mike10004.xvfbtesting.XvfbRule;
 import io.github.bonigarcia.wdm.ChromeDriverManager;
+import io.github.bonigarcia.wdm.WebDriverManager;
 import io.github.mike10004.nanochamp.server.NanoControl;
 import io.github.mike10004.nanochamp.server.NanoResponse;
 import io.github.mike10004.nanochamp.server.NanoServer;
@@ -35,7 +36,7 @@ public class BasicCrxPacker_WebDriverTest {
 
     @BeforeClass
     public static void configureChromedriver() {
-        ChromeDriverManager.getInstance().setup();
+        WebDriverManager.chromedriver().setup();
     }
 
     @Test
@@ -52,8 +53,9 @@ public class BasicCrxPacker_WebDriverTest {
                 "<head><title>Test Page</title></head>" +
                 "<body>This is a test</body>" +
                 "</html>";
+        NanoServer.ResponseProvider nanoResponder = x -> NanoResponse.status(200).htmlUtf8(html);
         NanoServer server = NanoServer.builder()
-                .get(NanoResponse.status(200).htmlUtf8(html))
+                .get(nanoResponder)
                 .build();
         try (NanoControl control = server.startServer()) {
             WebDriver driver = new ChromeDriver(driverService, options);
