@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import static java.util.Objects.requireNonNull;
@@ -55,6 +54,10 @@ public abstract class Unzippage {
     @Nullable
     public abstract ByteSource getFileBytes(String fileEntry);
 
+    /**
+     * Returns an iterable over all entries, both files and directories.
+     * @return an iterable
+     */
     public Iterable<String> allEntries() {
         return Iterables.concat(directoryEntries(), fileEntries());
     }
@@ -88,6 +91,9 @@ public abstract class Unzippage {
 
     /**
      * Unzips data from a stream using the default unzip configuration.
+     * @param inputStream stream containing zipped data
+     * @return the unzippage
+     * @throws IOException if something goes awry
      * @see #unzip(InputStream, UnzipConfig)
      * @see UnzipConfig#getDefault()
      */
@@ -98,6 +104,7 @@ public abstract class Unzippage {
     /**
      * Unzips data from an input stream. The stream must be open and positioned
      * at the beginning of the zip data.
+     * @param config configuration
      * @param inputStream the input stream
      * @return the unzippage
      * @throws IOException if something goes awry
@@ -108,8 +115,11 @@ public abstract class Unzippage {
 
     /**
      * Unzips a file with the default unzip configuration.
+     * @param zipPathname pathname of a zip file
+     * @return the unzippage
      * @see #unzip(File, UnzipConfig)
      * @see UnzipConfig#getDefault()
+     * @throws IOException if something goes awry
      */
     public static Unzippage unzip(File zipPathname) throws IOException {
         return unzip(zipPathname, UnzipConfig.getDefault());
@@ -118,6 +128,7 @@ public abstract class Unzippage {
     /**
      * Unzips a zip file.
      * @param zipPathname the pathname of the zip file
+     * @param config configuration
      * @return the unzippage
      * @throws IOException if something goes awry
      */
@@ -125,6 +136,14 @@ public abstract class Unzippage {
         return unzip(zipPathname, config, ZipIntegrityConstraint.CHECK_INTEGRITY);
     }
 
+    /**
+     * Unzips a zip file.
+     * @param zipPathname pathname of the zip file
+     * @param config configuration
+     * @param integrityConstraint integrity constraint
+     * @return the unzippage
+     * @throws IOException if something goes awry
+     */
     public static Unzippage unzip(File zipPathname, UnzipConfig config, ZipIntegrityConstraint integrityConstraint) throws IOException {
         if (integrityConstraint == ZipIntegrityConstraint.CHECK_INTEGRITY) {
             try (InputStream in = new FileInputStream(zipPathname)) {
@@ -137,9 +156,16 @@ public abstract class Unzippage {
         }
     }
 
-    public static class UnzipException extends ZipException {
-        public UnzipException(String s) {
-            super(s);
+    /**
+     * Exception thrown on unzipping errors.
+     */
+    public static class UnzipException extends java.util.zip.ZipException {
+        /**
+         * Constructs an instance.
+         * @param message the message
+         */
+        public UnzipException(String message) {
+            super(message);
         }
     }
 
@@ -179,6 +205,11 @@ public abstract class Unzippage {
         return new CollectionUnzippage(directoryEntries, Maps.transformValues(fileEntries, ByteSource::wrap));
     }
 
+    /**
+     * Extracts this unzippage to the given directory.
+     * @param parent the directory that is to contain the unzipped files
+     * @throws IOException on I/O error
+     */
     public void extractTo(Path parent) throws IOException {
         for (String fileEntry : fileEntries()) {
             File file = parent.resolve(fileEntry).toFile();
