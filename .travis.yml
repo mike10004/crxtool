@@ -6,7 +6,7 @@ cache:
   directories:
     - $HOME/.m2
 before_install: dpkg-query -l google-chrome-stable chromium-browser || true
-install: mvn -B -V $MORE_MAVEN_OPTS dependency:go-offline
+install: mvn -B -V $MORE_MAVEN_OPTS dependency:resolve compile test-compile
 before_script: true
 script:
   - mvn -B -V $MORE_MAVEN_OPTS -Dwdm.chromeDriverVersion=$CHROMEDRIVER_VERSION install
