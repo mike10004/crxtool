@@ -22,7 +22,7 @@ public class Crx2Packer implements CrxPacker {
     private static final Crx2Packer DEFAULT_INSTANCE = new Crx2Packer();
 
     private static final String MAGIC_NUMBER = "Cr24";
-    static final int FORMAT_VERSION = 2;
+    static final CrxVersion CRX_VERSION = CrxVersion.CRX2;
     private static final int MAX_SANE_PUBLIC_KEY_LENGTH = 1024 * 32;
     private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 128;
 
@@ -66,7 +66,7 @@ public class Crx2Packer implements CrxPacker {
     }
 
     protected void writeFormatVersion(LittleEndianDataOutputStream leOutput) throws IOException {
-        leOutput.writeInt(FORMAT_VERSION);
+        leOutput.writeInt(CRX_VERSION.identifier());
     }
 
     protected byte[] sign(ByteSource zipBytes, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
@@ -77,5 +77,9 @@ public class Crx2Packer implements CrxPacker {
         return signatureBytes;
     }
 
+    @Override
+    public CrxVersion getCrxVersion() {
+        return CRX_VERSION;
+    }
 }
 

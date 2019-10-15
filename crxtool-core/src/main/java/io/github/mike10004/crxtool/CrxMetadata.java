@@ -46,8 +46,18 @@ public interface CrxMetadata {
     /**
      * Version of the CRX file format used.
      * @return the version
+     * @deprecated use {@link #getCrxVersion()}
      */
-    int getVersion();
+    @Deprecated
+    default int getVersion() {
+        return getCrxVersion().identifier();
+    }
+
+    /**
+     * Version of file format.
+     * @return version
+     */
+    CrxVersion getCrxVersion();
 
 }
 

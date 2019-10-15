@@ -67,7 +67,7 @@ public interface CrxPacker {
      * @return a default instance
      */
     static CrxPacker getDefault() {
-        return getPackerInstance(Crx2Packer.FORMAT_VERSION);
+        return getPackerInstance(CrxVersion.CRX2);
     }
 
     /**
@@ -75,13 +75,23 @@ public interface CrxPacker {
      * Only version 2 is currently supported.
      * @param version the version
      * @return the packer
+     * @deprecated use {@link }
      */
+    @Deprecated
     static CrxPacker getPackerInstance(int version) {
+        return getPackerInstance(CrxVersion.fromIdentifier(version));
+    }
+
+    static CrxPacker getPackerInstance(CrxVersion version) {
         switch (version) {
-            case Crx2Packer.FORMAT_VERSION:
+            case CRX2:
                 return Crx2Packer.getDefaultInstance();
+            case CRX3:
+                throw new UnsupportedOperationException("CRX3 is not yet supported");
             default:
                 throw new IllegalArgumentException(String.format("only version 2 is supported, not %s", version));
         }
     }
+
+    CrxVersion getCrxVersion();
 }

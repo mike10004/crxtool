@@ -37,8 +37,17 @@ public class BasicCrxParserTest {
     private Random random = new Random(getClass().getName().hashCode());
 
     @Test
-    public void parseMetadata() throws Exception {
-        ParsedCrx parsedCrx = parse(Resources.asByteSource(Tests.getMakePageRedCrxResource()));
+    public void parseMetadata_crx2() throws Exception {
+        test_parseMetadata(CrxVersion.CRX2);
+    }
+
+    @Test
+    public void parseMetadata_crx3() throws Exception {
+        test_parseMetadata(CrxVersion.CRX3);
+    }
+
+    private void test_parseMetadata(CrxVersion version) throws Exception {
+        ParsedCrx parsedCrx = parse(Resources.asByteSource(Tests.getMakePageRedCrxResource(version)));
         CrxMetadata metadata = parsedCrx.metadata;
         Unzippage unzippage = parsedCrx.unzippage;
         System.out.format("headerLength=%s%nid=%s%n%n", metadata.getFileHeader().length(), metadata.getId());

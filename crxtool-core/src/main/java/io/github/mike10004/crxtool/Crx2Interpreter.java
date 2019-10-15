@@ -16,8 +16,8 @@ class Crx2Interpreter extends CrxInterpreterBase {
     protected static final int MAX_SANE_PUBKEY_LENGTH = 1024 * 32;
     protected static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 64;
 
-    Crx2Interpreter(String magicNumber, int version) {
-        super(magicNumber, version);
+    public Crx2Interpreter(String magicNumber) {
+        super(magicNumber, CrxVersion.CRX2);
     }
 
     @Override

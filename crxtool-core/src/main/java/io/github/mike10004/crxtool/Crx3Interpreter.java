@@ -20,8 +20,8 @@ class Crx3Interpreter extends CrxInterpreterBase {
 
     private static final int MAX_SANE_HEADER_LEN = 1024 * 128;
 
-    Crx3Interpreter(String magicNumber, int version) {
-        super(magicNumber, version);
+    Crx3Interpreter(String magicNumber) {
+        super(magicNumber, CrxVersion.CRX3);
     }
 
     @Override

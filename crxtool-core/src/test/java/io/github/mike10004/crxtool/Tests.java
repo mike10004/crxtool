@@ -55,23 +55,23 @@ public class Tests {
         return choppedFile;
     }
 
-    public static URL getMakePageRedCrxResource() {
+    public static URL getMakePageRedCrxResource(CrxVersion version) {
         return Objects.requireNonNull(Tests.class.getResource("/make_page_red.crx"), "classpath:/make_page_red.crx resource not found");
     }
 
-    public static File getMakePageRedCrxFile() {
+    public static File getMakePageRedCrxFile(CrxVersion version) {
         try {
-            return new File(getMakePageRedCrxResource().toURI());
+            return new File(getMakePageRedCrxResource(version).toURI());
         } catch (URISyntaxException e) {
             throw new AssertionError(e);
         }
     }
 
-    public static Path getAddFooterExtensionDir() {
-        return getAddFooterManifestFile().getParentFile().toPath();
+    public static Path getAddFooterExtensionDir(CrxVersion version) {
+        return getAddFooterManifestFile(version).getParentFile().toPath();
     }
 
-    public static File getAddFooterManifestFile() {
+    public static File getAddFooterManifestFile(CrxVersion version) {
         try {
             return new File(Tests.class.getResource("/add_footer/manifest.json").toURI());
         } catch (URISyntaxException e) {

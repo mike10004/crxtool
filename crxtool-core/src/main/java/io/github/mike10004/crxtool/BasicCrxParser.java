@@ -23,6 +23,7 @@ public class BasicCrxParser implements CrxParser {
     public BasicCrxParser() {}
 
     private void checkMagicNumber(String magicNumber) throws io.github.mike10004.crxtool.CrxParsingException {
+//        if (!CrxParser.getMagicNumber().equals(magicNumber)) {
         if (!"Cr24".equals(magicNumber)) {
             try {
                 byte[] magicNumberBytes = magicNumber.getBytes(StandardCharsets.US_ASCII);
@@ -48,18 +49,24 @@ public class BasicCrxParser implements CrxParser {
         String magicNumber = readMagicNumber(crxInput);
         checkMagicNumber(magicNumber);
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
-        int version = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
+        int versionIdentifier = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
+        CrxVersion version;
+        try {
+            version = CrxVersion.fromIdentifier(versionIdentifier);
+        } catch (IllegalArgumentException e) {
+            throw new CrxParsingException(e);
+        }
         CrxInterpreter interpreter = getCrxInterpreter(magicNumber, version);
         CrxMetadata metadata = interpreter.parseMetadataAfterVersion(crxInput);
         return metadata;
     }
 
-    protected CrxInterpreter getCrxInterpreter(@SuppressWarnings("unused") String magicNumber, int version) throws CrxInterpreter.UnsupportedCrxVersionException {
+    protected CrxInterpreter getCrxInterpreter(String magicNumber, CrxVersion version) throws CrxInterpreter.UnsupportedCrxVersionException {
         switch (version) {
-            case Crx2Packer.FORMAT_VERSION:
-                return new Crx2Interpreter(magicNumber, version);
-            case 3:
-                return new Crx3Interpreter(magicNumber, version);
+            case CRX2:
+                return new Crx2Interpreter(magicNumber);
+            case CRX3:
+                return new Crx3Interpreter(magicNumber);
             default:
                 throw new CrxInterpreter.UnsupportedCrxVersionException("version " + version + " is not supported");
         }

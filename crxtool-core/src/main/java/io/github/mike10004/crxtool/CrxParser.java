@@ -32,4 +32,7 @@ public interface CrxParser {
         return BasicCrxParser.getDefaultInstance();
     }
 
+    static String getMagicNumber() {
+        return "Crx24";
+    }
 }

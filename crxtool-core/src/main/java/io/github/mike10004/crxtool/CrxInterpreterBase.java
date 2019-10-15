@@ -6,6 +6,8 @@ import com.google.common.io.BaseEncoding;
 
 import java.util.Arrays;
 
+import static java.util.Objects.requireNonNull;
+
 abstract class CrxInterpreterBase implements BasicCrxParser.CrxInterpreter {
 
     protected static final int ID_LEN = 32;
@@ -13,11 +15,14 @@ abstract class CrxInterpreterBase implements BasicCrxParser.CrxInterpreter {
     protected static final char[] CRX_ID_CHARS = "abcdefghijklmnop".toCharArray();
 
     protected final String magicNumber;
-    protected final int version;
+    protected final CrxVersion version;
 
-    protected CrxInterpreterBase(String magicNumber, int version) {
-        this.magicNumber = magicNumber;
-        this.version = version;
+    protected CrxInterpreterBase(String magicNumber, CrxVersion version) {
+        this.magicNumber = requireNonNull(magicNumber);
+        if (magicNumber.trim().isEmpty()) {
+            throw new IllegalArgumentException("magic number must be nonempty, non-whitespace");
+        }
+        this.version = requireNonNull(version);
     }
 
     @SuppressWarnings("SameParameterValue")

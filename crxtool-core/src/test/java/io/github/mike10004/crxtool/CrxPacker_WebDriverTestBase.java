@@ -1,7 +1,6 @@
 package io.github.mike10004.crxtool;
 
 import com.github.mike10004.xvfbtesting.XvfbRule;
-import io.github.bonigarcia.wdm.ChromeDriverManager;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import io.github.mike10004.nanochamp.server.NanoControl;
 import io.github.mike10004.nanochamp.server.NanoResponse;
@@ -74,7 +73,8 @@ public abstract class CrxPacker_WebDriverTestBase {
     protected abstract CrxPacker createPacker();
 
     private File packExtension() throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
-        Path extensionDir = Tests.getAddFooterExtensionDir();
+        CrxPacker packer = createPacker();
+        Path extensionDir = Tests.getAddFooterExtensionDir(packer.getCrxVersion());
         File extensionFile = File.createTempFile("BasicCrxPacker_WebDriverTest", ".crx");
         try (OutputStream output = new FileOutputStream(extensionFile)) {
             createPacker().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);

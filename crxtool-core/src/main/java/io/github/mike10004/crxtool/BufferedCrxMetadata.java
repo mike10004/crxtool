@@ -15,13 +15,13 @@ class BufferedCrxMetadata implements CrxMetadata {
 
     private final String magicNumber;
 
-    private final int version;
+    private final CrxVersion crxVersion;
 
     private final CrxFileHeader fileHeader;
 
-    public BufferedCrxMetadata(String magicNumber, int version, CrxFileHeader fileHeader, String id) {
+    public BufferedCrxMetadata(String magicNumber, CrxVersion crxVersion, CrxFileHeader fileHeader, String id) {
         this.magicNumber = requireNonNull(magicNumber);
-        this.version = version;
+        this.crxVersion = requireNonNull(crxVersion);
         this.fileHeader = requireNonNull(fileHeader);
         this.id = requireNonNull(id);
     }
@@ -54,8 +54,8 @@ class BufferedCrxMetadata implements CrxMetadata {
      * @return the version
      */
     @Override
-    public int getVersion() {
-        return version;
+    public CrxVersion getCrxVersion() {
+        return crxVersion;
     }
 
     @Override
@@ -63,7 +63,7 @@ class BufferedCrxMetadata implements CrxMetadata {
         MoreObjects.ToStringHelper h = MoreObjects.toStringHelper(this);
         if (id != null) h.add("id", id);
         if (magicNumber != null) h.add("magicNumber", magicNumber);
-        h.add("version", version);
+        h.add("version", getCrxVersion());
         if (fileHeader != null) h.add("fileHeader", fileHeader);
         return h.toString();
     }
@@ -73,7 +73,7 @@ class BufferedCrxMetadata implements CrxMetadata {
         if (this == o) return true;
         if (!(o instanceof BufferedCrxMetadata)) return false;
         BufferedCrxMetadata that = (BufferedCrxMetadata) o;
-        return version == that.version &&
+        return Objects.equals(crxVersion, that.crxVersion) &&
                 Objects.equals(id, that.id) &&
                 Objects.equals(magicNumber, that.magicNumber) &&
                 Objects.equals(fileHeader, that.fileHeader);
@@ -81,6 +81,6 @@ class BufferedCrxMetadata implements CrxMetadata {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, magicNumber, version, fileHeader);
+        return Objects.hash(id, magicNumber, crxVersion.identifier(), fileHeader);
     }
 }
