@@ -1,9 +1,5 @@
 package io.github.mike10004.crxtool;
 
-import com.google.common.io.BaseEncoding;
-import com.google.common.io.CharStreams;
-import com.google.common.io.LineProcessor;
-
 import java.io.IOException;
 import java.io.Reader;
 

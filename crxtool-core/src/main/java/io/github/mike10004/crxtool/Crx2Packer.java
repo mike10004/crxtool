@@ -21,7 +21,7 @@ public class Crx2Packer implements CrxPacker {
 
     private static final Crx2Packer DEFAULT_INSTANCE = new Crx2Packer();
 
-    private static final String MAGIC_NUMBER = "Cr24";
+    private static final String MAGIC_NUMBER = CrxPackers.MAGIC_NUMBER;
     static final CrxVersion CRX_VERSION = CrxVersion.CRX2;
     private static final int MAX_SANE_PUBLIC_KEY_LENGTH = 1024 * 32;
     private static final int MAX_SANE_SIGNATURE_LENGTH = 1024 * 128;
@@ -52,8 +52,8 @@ public class Crx2Packer implements CrxPacker {
         checkArgument(publicKeyBytes.length <= MAX_SANE_PUBLIC_KEY_LENGTH, "public key length is insane: %s", publicKeyBytes.length);
         checkArgument(signature.length <= MAX_SANE_SIGNATURE_LENGTH, "signature length is insane: %s", signature.length);
         LittleEndianDataOutputStream leOutput = new LittleEndianDataOutputStream(output);
-        writeMagicNumber(leOutput);
-        writeFormatVersion(leOutput);
+        CrxPackers.writeMagicNumber(leOutput, MAGIC_NUMBER);
+        CrxPackers.writeFormatVersion(leOutput, getCrxVersion());
         leOutput.writeInt(publicKeyBytes.length);
         leOutput.writeInt(signature.length);
         leOutput.flush();
@@ -61,25 +61,16 @@ public class Crx2Packer implements CrxPacker {
         output.write(signature);
     }
 
-    protected void writeMagicNumber(LittleEndianDataOutputStream leOutput) throws IOException {
-        leOutput.write(MAGIC_NUMBER.getBytes(StandardCharsets.US_ASCII));
-    }
-
-    protected void writeFormatVersion(LittleEndianDataOutputStream leOutput) throws IOException {
-        leOutput.writeInt(CRX_VERSION.identifier());
-    }
-
     protected byte[] sign(ByteSource zipBytes, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
         Signature sig = Signature.getInstance("SHA1WithRSA");
-        sig.initSign(keyPair.getPrivate());
-        sig.update(zipBytes.read());
-        byte[] signatureBytes = sig.sign();
-        return signatureBytes;
+        return CrxPackers.sign(zipBytes, keyPair, sig);
     }
 
     @Override
     public CrxVersion getCrxVersion() {
         return CRX_VERSION;
     }
+
+
 }
 

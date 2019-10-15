@@ -4,6 +4,11 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.net.URISyntaxException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -35,6 +40,13 @@ public class Crx2PackerTest extends CrxPackerTestBase {
         AsymmetricKeyProof proof = metadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
         assertEquals("pubkey length", publicKeyBytes.length, proof.getPublicKeyLength());
         assertEquals("sig length", signature.length, proof.getSignatureLength());
+    }
+
+    @Override
+    protected CrxTestCase loadPackExtensionTestCase() throws InvalidKeySpecException, NoSuchAlgorithmException, URISyntaxException {
+        KeyPair keyPair = KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(TestKey.getPrivateKeyBytes());
+        File referenceCrxFile = new File(Tests.getMakePageRedCrxResource(CrxVersion.CRX2).toURI());
+        return new CrxTestCase(referenceCrxFile, keyPair, true);
     }
 
 }

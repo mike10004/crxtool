@@ -1,29 +1,24 @@
 package io.github.mike10004.crxtool;
 
-import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteSource;
-import com.google.common.io.CountingOutputStream;
 import com.google.common.io.Files;
-import com.google.common.io.LittleEndianDataOutputStream;
 import io.github.mike10004.crxtool.testing.Unzippage;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.util.Random;
 import java.util.zip.ZipFile;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -39,13 +34,28 @@ public abstract class CrxPackerTestBase {
 
     protected abstract CrxVersion getCrxVersion();
 
+    public static class CrxTestCase {
+        public final File referenceCrxFile;
+        public final KeyPair keyPairUsedToSignFile;
+        public final boolean expectSignaturesEqual;
+
+        public CrxTestCase(File referenceCrxFile, KeyPair keyPairUsedToSignFile, boolean expectSignaturesEqual) {
+            this.referenceCrxFile = referenceCrxFile;
+            this.keyPairUsedToSignFile = keyPairUsedToSignFile;
+            this.expectSignaturesEqual = expectSignaturesEqual;
+        }
+    }
+
+    protected abstract CrxTestCase loadPackExtensionTestCase() throws IOException, GeneralSecurityException, URISyntaxException;
+
     @Test
     public void packExtension() throws Exception {
-        File referenceCrxFile = new File(Tests.getMakePageRedCrxResource(getCrxVersion()).toURI());
+        CrxTestCase testCase = loadPackExtensionTestCase();
+        File referenceCrxFile = testCase.referenceCrxFile;
         File extensionZipFile = Tests.chopZipFromCrx(referenceCrxFile);
         ByteSource extensionZip = Files.asByteSource(extensionZipFile);
         CrxPacker packer = createCrxPacker();
-        KeyPair keyPair = KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(TestKey.getPrivateKeyBytes());
+        KeyPair keyPair = testCase.keyPairUsedToSignFile;
         File extensionFile = File.createTempFile("crxtool-unit-test", ".crx", temporaryFolder.getRoot());
         try (OutputStream outputStream = new FileOutputStream(extensionFile)) {
             packer.packExtension(extensionZip, keyPair, outputStream);
@@ -53,14 +63,16 @@ public abstract class CrxPackerTestBase {
         CrxMetadata actualMetadata = readMetadata(extensionFile);
         CrxMetadata expectedMetadata = readMetadata(referenceCrxFile);
         assertEquals("magic number", expectedMetadata.getMagicNumber(), actualMetadata.getMagicNumber());
-        assertEquals("version", expectedMetadata.getVersion(), actualMetadata.getVersion());
+        assertEquals("version", expectedMetadata.getCrxVersion(), actualMetadata.getCrxVersion());
         AsymmetricKeyProof expectedProof = expectedMetadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
         AsymmetricKeyProof actualProof = actualMetadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
         assertEquals("pubkey.length", expectedProof.getPublicKeyLength(), actualProof.getPublicKeyLength());
         assertEquals("sig.length", expectedProof.getSignatureLength(), actualProof.getSignatureLength());
         assertEquals("pubkey", expectedProof.getPublicKeyBase64(), actualProof.getPublicKeyBase64());
-        assertEquals("sig", expectedProof.getSignatureBase64(), actualProof.getSignatureBase64());
-        assertTrue("crx bytes", Files.asByteSource(referenceCrxFile).contentEquals(Files.asByteSource(extensionFile)));
+        if (testCase.expectSignaturesEqual) {
+            assertEquals("signature", expectedProof.getSignatureBase64(), actualProof.getSignatureBase64());
+            assertTrue("crx bytes", Files.asByteSource(referenceCrxFile).contentEquals(Files.asByteSource(extensionFile)));
+        }
     }
 
     @Test
@@ -116,23 +128,6 @@ public abstract class CrxPackerTestBase {
         try (InputStream inputStream = new FileInputStream(crxFile)) {
             return CrxParser.getDefault().parseMetadata(inputStream);
         }
-    }
-
-    private static final String FORMAT_VERSION_HEX = "02000000";
-
-    @Test
-    public void writeFormatVersion() throws Exception {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream(32);
-        CountingOutputStream counter = new CountingOutputStream(buffer);
-        LittleEndianDataOutputStream output = new LittleEndianDataOutputStream(counter);
-        new Crx2Packer().writeFormatVersion(output);
-        output.flush();
-        long count = counter.getCount();
-        assertEquals("byte count", 4, count);
-        byte[] expected = BaseEncoding.base16().decode(FORMAT_VERSION_HEX);
-        byte[] actual = buffer.toByteArray();
-//        System.out.format("%s%n", BaseEncoding.base16().encode(actual));
-        assertArrayEquals("version encoding", expected, actual);
     }
 
     protected abstract CrxPacker createCrxPacker();
