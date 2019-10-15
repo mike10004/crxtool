@@ -25,3 +25,6 @@ buildNumber.properties
 /.factorypath
 /*/.factorypath
 
+/package-lock.json
+/node_modules/
+key-for-testing.rsa

@@ -38,20 +38,21 @@ public class BasicCrxParserTest {
 
     @Test
     public void parseMetadata_crx2() throws Exception {
-        test_parseMetadata(CrxVersion.CRX2);
+        test_parseMetadata(CrxVersion.CRX2, "dnogaomdbgfngjgalaoggcfahgeibfdc");
     }
 
     @Test
     public void parseMetadata_crx3() throws Exception {
-        test_parseMetadata(CrxVersion.CRX3);
+        test_parseMetadata(CrxVersion.CRX3, "fpmlidmjhnfgbgnfhofnbbiacmmmcdgl");
     }
 
-    private void test_parseMetadata(CrxVersion version) throws Exception {
+    private void test_parseMetadata(CrxVersion version, String expectedExtensionId) throws Exception {
         ParsedCrx parsedCrx = parse(Resources.asByteSource(Tests.getMakePageRedCrxResource(version)));
         CrxMetadata metadata = parsedCrx.metadata;
+        assertEquals("version", metadata.getCrxVersion(), version);
         Unzippage unzippage = parsedCrx.unzippage;
         System.out.format("headerLength=%s%nid=%s%n%n", metadata.getFileHeader().length(), metadata.getId());
-        assertEquals("id", "dnogaomdbgfngjgalaoggcfahgeibfdc", metadata.getId());
+        assertEquals("id", expectedExtensionId, metadata.getId());
         unzippage.allEntries().forEach(entry -> {
             System.out.format("%s%n", entry);
         });

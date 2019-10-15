@@ -56,7 +56,7 @@ public class Tests {
     }
 
     public static URL getMakePageRedCrxResource(CrxVersion version) {
-        return Objects.requireNonNull(Tests.class.getResource("/make_page_red.crx"), "classpath:/make_page_red.crx resource not found");
+        return Objects.requireNonNull(Tests.class.getResource("/make_page_red." + version.name().toLowerCase()), "classpath:/make_page_red.crx resource not found");
     }
 
     public static File getMakePageRedCrxFile(CrxVersion version) {
