@@ -29,7 +29,7 @@ import java.security.SignatureException;
 
 import static org.junit.Assert.assertEquals;
 
-public class BasicCrxPacker_WebDriverTest {
+public abstract class CrxPacker_WebDriverTestBase {
 
     @Rule
     public XvfbRule xvfb = XvfbRule.builder().build();
@@ -71,11 +71,13 @@ public class BasicCrxPacker_WebDriverTest {
         }
     }
 
+    protected abstract CrxPacker createPacker();
+
     private File packExtension() throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
         Path extensionDir = Tests.getAddFooterExtensionDir();
         File extensionFile = File.createTempFile("BasicCrxPacker_WebDriverTest", ".crx");
         try (OutputStream output = new FileOutputStream(extensionFile)) {
-            new Crx2Packer().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
+            createPacker().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
         }
         return extensionFile;
     }

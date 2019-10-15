@@ -31,7 +31,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class BasicCrxPackerTest {
+public class Crx2PackerTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
