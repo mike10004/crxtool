@@ -13,7 +13,7 @@ Library for packing and unpacking Chrome extension `.crx` files.
     <dependency>
         <groupId>com.github.mike10004</groupId>
         <artifactId>crxtool-core</artifactId>
-        <version>0.12</version>
+        <version>0.15</version>
     </dependency>
 
 ### Usage
@@ -23,9 +23,10 @@ Library for packing and unpacking Chrome extension `.crx` files.
     try (InputStream in = new FileInputStream("my_extension.crx") {
         CrxMetadata metadata = CrxParser.getDefault().parseMetadata(in);
         System.out.println("id = " + metadata.getId());
-        // read the remainder of the stream into a byte array containing zipped data
-        byte[] zipBytes = com.google.common.io.ByteStreams.toByteArray(in);
-        // ...
+        // handle remainder of stream as a zip archive
+        try (ZipInputStream zin = new ZipInputStream(in)) {
+            // ...
+        }
     }
 
 #### Packing
@@ -46,7 +47,7 @@ Library for packing and unpacking Chrome extension `.crx` files.
     <plugin>
         <groupId>com.github.mike10004</groupId>
         <artifactId>crxtool-maven-plugin</artifactId>
-        <version>0.12</version>
+        <version>0.15</version>
     </plugin>
 
 ### Usage
@@ -58,7 +59,7 @@ Place extension source files in `src/main/extension`.
             <plugin>
                 <groupId>com.github.mike10004</groupId>
                 <artifactId>crxtool-maven-plugin</artifactId>
-                <version>0.12</version>
+                <version>0.15</version>
                 <executions>
                     <execution>
                         <id>pack</id>
