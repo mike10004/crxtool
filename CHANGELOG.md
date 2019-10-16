@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.15
+----
+
+* support packing extensions in CRX format version 3
+* breaking change: remove Guava usages from public API
+* breaking change: use strongly-typed keys for proof algorithms
+* support returning stream segment annotations
+
 0.12
 ----
 
