@@ -6,21 +6,26 @@ import com.google.common.collect.Multimap;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 class MapFileHeader implements CrxFileHeader {
 
-    public static final String ALGORITHM_SHA256_WITH_RSA = "sha256_with_rsa";
-    public static final String ALGORITHM_SHA256_WITH_ECDSA = "sha256_with_ecdsa";
+    protected final ImmutableMultimap<CrxProofAlgorithm, AsymmetricKeyProof> proofs;
 
-    protected final ImmutableMultimap<String, AsymmetricKeyProof> proofs;
-
-    MapFileHeader(Multimap<String, AsymmetricKeyProof> proofs) {
+    public MapFileHeader(Multimap<CrxProofAlgorithm, AsymmetricKeyProof> proofs) {
         this.proofs = ImmutableMultimap.copyOf(proofs);
     }
 
     @Override
-    public List<AsymmetricKeyProof> getAsymmetricKeyProofs(String algorithm) {
+    public List<AsymmetricKeyProof> getAsymmetricKeyProofs(CrxProofAlgorithm algorithm) {
         return ImmutableList.copyOf(proofs.get(algorithm));
+    }
+
+    @Override
+    public List<AsymmetricKeyProofContainer> getAllAsymmetricKeyProofs() {
+        return proofs.entries().stream()
+                .map(entry -> AsymmetricKeyProofContainer.create(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
     }
 
     @Override

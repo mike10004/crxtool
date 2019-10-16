@@ -16,11 +16,9 @@ public interface CrxFileHeader {
      * @param algorithm the algorithm
      * @return the proof, possibly empty
      */
-    List<AsymmetricKeyProof> getAsymmetricKeyProofs(String algorithm);
+    List<AsymmetricKeyProof> getAsymmetricKeyProofs(CrxProofAlgorithm algorithm);
 
-    default List<AsymmetricKeyProof> getAsymmetricKeyProofs(CrxProofAlgorithm algorithm) {
-        return getAsymmetricKeyProofs(algorithm.crxFileHeaderKey());
-    }
+    List<AsymmetricKeyProofContainer> getAllAsymmetricKeyProofs();
 
     /**
      * Gets the count of bytes in the packed binary form of this header instance.

@@ -38,7 +38,11 @@ public class BasicCrxParserTest {
 
     @Test
     public void parseMetadata_crx2() throws Exception {
-        test_parseMetadata(CrxVersion.CRX2, TestingKey.getInstance().getIdPmdecimal());
+        CrxMetadata metadata = test_parseMetadata(CrxVersion.CRX2, TestingKey.getInstance().getIdPmdecimal());
+        List<AsymmetricKeyProofContainer> keyProofContainers = metadata.getFileHeader().getAllAsymmetricKeyProofs();
+        assertEquals("num proofs", 1, keyProofContainers.size());
+        AsymmetricKeyProofContainer container = keyProofContainers.get(0);
+        System.out.format("algorithm = %s%n", container.algorithm());
     }
 
     @Test
@@ -46,7 +50,7 @@ public class BasicCrxParserTest {
         test_parseMetadata(CrxVersion.CRX3, TestingKey.getInstance().getIdPmdecimal());
     }
 
-    private void test_parseMetadata(CrxVersion version, String expectedExtensionId) throws Exception {
+    private CrxMetadata test_parseMetadata(CrxVersion version, String expectedExtensionId) throws Exception {
         ParsedCrx parsedCrx = parse(Resources.asByteSource(Tests.getMakePageRedCrxResource(version)));
         CrxMetadata metadata = parsedCrx.metadata;
         assertEquals("version", metadata.getCrxVersion(), version);
@@ -64,6 +68,7 @@ public class BasicCrxParserTest {
             byte[] expectedBytes = Resources.toByteArray(reference);
             assertEqualsAsTextFiles("file bytes", expectedBytes, actualBytes, StandardCharsets.UTF_8);
         }
+        return metadata;
     }
 
     private static class ParsedCrx {

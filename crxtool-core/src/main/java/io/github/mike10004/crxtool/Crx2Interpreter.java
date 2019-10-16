@@ -46,7 +46,7 @@ class Crx2Interpreter extends CrxInterpreterBase {
     }
 
     private static CrxFileHeader createCrx2FileHeader(String pubkeyBase64, String signatureBase64) {
-        return new MapFileHeader(ImmutableMultimap.of(MapFileHeader.ALGORITHM_SHA256_WITH_RSA, createCrx2Proof(pubkeyBase64, signatureBase64)));
+        return new MapFileHeader(ImmutableMultimap.of(Crx2ProofAlgorithm.sha1_with_rsa, createCrx2Proof(pubkeyBase64, signatureBase64)));
     }
 
     private static AsymmetricKeyProof createCrx2Proof(String pubkeyBase64, String signatureBase64) {

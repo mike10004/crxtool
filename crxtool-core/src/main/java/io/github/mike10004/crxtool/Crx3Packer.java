@@ -18,7 +18,16 @@ import java.security.SignatureException;
 
 public class Crx3Packer implements CrxPacker {
 
+    private static final CrxPacker DEFAULT_INSTANCE = new Crx3Packer();
+
     private static final String MAGIC_NUMBER = CrxPackers.MAGIC_NUMBER;
+
+    public Crx3Packer() {
+    }
+
+    public static CrxPacker getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+    }
 
     @Override
     public void packExtension(InputSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {

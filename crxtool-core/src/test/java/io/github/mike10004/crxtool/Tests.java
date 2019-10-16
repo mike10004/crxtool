@@ -6,6 +6,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.io.ByteSource;
 import com.google.common.io.Files;
 import com.google.common.primitives.Longs;
+import com.google.common.util.concurrent.AtomicLongMap;
 import io.github.mike10004.crxtool.testing.Unzippage;
 
 import javax.annotation.Nullable;
@@ -30,6 +31,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 public class Tests {
 
@@ -102,6 +105,12 @@ public class Tests {
         byte[] seedBytes = Longs.toByteArray(seed);
         SecureRandom random = new SecureRandom(seedBytes);
         return KeyPairs.generateRsaKeyPair(random);
+    }
+
+    public static AsymmetricKeyProof getOnlyProof(CrxMetadata md) {
+        List<AsymmetricKeyProofContainer> containers = md.getFileHeader().getAllAsymmetricKeyProofs();
+        checkArgument(containers.size() == 1, "header must contain exactly one proof: %s", containers);
+        return containers.get(0).proof();
     }
 
     public static class DirDiff {
@@ -267,12 +276,11 @@ public class Tests {
             out.format("magic:      %s%n", md.getMagicNumber());
             CrxFileHeader header = md.getFileHeader();
             out.format("header len: %s%n", header.numBytes());
-            for (CrxProofAlgorithm proofAlgo : CrxProofAlgorithm.allKnown()) {
-                List<AsymmetricKeyProof> proofs = header.getAsymmetricKeyProofs(proofAlgo);
-                for (int i = 0; i < proofs.size(); i++) {
-                    AsymmetricKeyProof proof = proofs.get(i);
-                    out.format("proof: %s %s len=%s%n", proofAlgo, i, proof.getCombinedLength());
-                }
+            AtomicLongMap<CrxProofAlgorithm> algoCount = AtomicLongMap.create();
+            for (AsymmetricKeyProofContainer proofContainer : header.getAllAsymmetricKeyProofs()) {
+                AsymmetricKeyProof proof = proofContainer.proof();
+                long i = algoCount.getAndIncrement(proofContainer.algorithm());
+                out.format("proof: %s %s len=%s%n", proofContainer.algorithm(), i, proof.getCombinedLength());
             }
         }
     }

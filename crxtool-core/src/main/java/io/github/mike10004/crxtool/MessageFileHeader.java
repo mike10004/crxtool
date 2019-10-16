@@ -4,9 +4,12 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import io.github.mike10004.crxtool.message.Crx3;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 
@@ -19,15 +22,26 @@ class MessageFileHeader implements CrxFileHeader {
     }
 
     @Override
-    public List<AsymmetricKeyProof> getAsymmetricKeyProofs(String algorithm) {
-        switch (algorithm) {
-            case MapFileHeader.ALGORITHM_SHA256_WITH_ECDSA:
-                return message.getSha256WithEcdsaList().stream().map(this::convert).collect(ImmutableList.toImmutableList());
-            case MapFileHeader.ALGORITHM_SHA256_WITH_RSA:
-                return message.getSha256WithRsaList().stream().map(this::convert).collect(ImmutableList.toImmutableList());
-            default:
-                return Collections.emptyList();
+    public List<AsymmetricKeyProof> getAsymmetricKeyProofs(CrxProofAlgorithm algorithm) {
+        if (Crx3ProofAlgorithm.sha256_with_ecdsa.fileHeaderKey.equals(algorithm.crxFileHeaderKey())) {
+            return message.getSha256WithEcdsaList().stream().map(this::convert).collect(ImmutableList.toImmutableList());
         }
+        if (Crx3ProofAlgorithm.sha256_with_rsa.fileHeaderKey.equals(algorithm.crxFileHeaderKey())) {
+            return message.getSha256WithRsaList().stream().map(this::convert).collect(ImmutableList.toImmutableList());
+        }
+        return Collections.emptyList();
+    }
+
+    private Stream<AsymmetricKeyProofContainer> streamProofContainers(CrxProofAlgorithm algorithm) {
+        return getAsymmetricKeyProofs(algorithm).stream()
+                .map(perAlgo -> AsymmetricKeyProofContainer.create(algorithm, perAlgo));
+    }
+
+    @Override
+    public List<AsymmetricKeyProofContainer> getAllAsymmetricKeyProofs() {
+        return Arrays.stream(Crx3ProofAlgorithm.values())
+                .flatMap(this::streamProofContainers)
+                .collect(Collectors.toList());
     }
 
     protected AsymmetricKeyProof convert(Crx3.AsymmetricKeyProof source) {
@@ -54,13 +68,11 @@ class MessageFileHeader implements CrxFileHeader {
 
     @Override
     public String toString() {
-        return toString(message);
-    }
-
-    private static String toString(Crx3.CrxFileHeader message) {
-        return MoreObjects.toStringHelper(message)
-                .add(String.format("%s.count", MapFileHeader.ALGORITHM_SHA256_WITH_RSA), message.getSha256WithRsaCount())
-                .add(String.format("%s.count", MapFileHeader.ALGORITHM_SHA256_WITH_ECDSA), message.getSha256WithEcdsaCount())
-                .toString();
+        MoreObjects.ToStringHelper h = MoreObjects.toStringHelper("Crx3FileHeader");
+        for (CrxProofAlgorithm algorithm : Crx3ProofAlgorithm.values()) {
+            int count = getAsymmetricKeyProofs(algorithm).size();
+            h.add(String.format("%s.count", algorithm), count);
+        }
+        return h.toString();
     }
 }

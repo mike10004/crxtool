@@ -45,7 +45,7 @@ public class Crx3PackerTest extends CrxPackerTestBase {
         }
         assertEquals(CrxVersion.CRX3, metadata.getCrxVersion());
         List<AsymmetricKeyProof> proofs = metadata.getFileHeader()
-                .getAsymmetricKeyProofs(CrxProofAlgorithm.sha256_with_rsa);
+                .getAsymmetricKeyProofs(Crx3ProofAlgorithm.sha256_with_rsa);
         assertEquals("expect exactly 1 sha256_with_rsa proof", 1, proofs.size());
         AsymmetricKeyProof proof = proofs.get(0);
         assertEquals("public key base64", KeyPairs.encodePublicKeyBase64(packResult.keyPairUsedToSignFile), proof.getPublicKeyBase64());

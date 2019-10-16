@@ -78,8 +78,8 @@ public abstract class CrxPackerTestBase {
         CrxMetadata expectedMetadata = readMetadata(referenceCrxFile);
         assertEquals("magic number", expectedMetadata.getMagicNumber(), actualMetadata.getMagicNumber());
         assertEquals("version", expectedMetadata.getCrxVersion(), actualMetadata.getCrxVersion());
-        AsymmetricKeyProof expectedProof = expectedMetadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
-        AsymmetricKeyProof actualProof = actualMetadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
+        AsymmetricKeyProof expectedProof = Tests.getOnlyProof(expectedMetadata);
+        AsymmetricKeyProof actualProof = Tests.getOnlyProof(actualMetadata);
         assertEquals("pubkey.length", expectedProof.getPublicKeyLength(), actualProof.getPublicKeyLength());
         assertEquals("sig.length", expectedProof.getSignatureLength(), actualProof.getSignatureLength());
         assertEquals("pubkey", expectedProof.getPublicKeyBase64(), actualProof.getPublicKeyBase64());

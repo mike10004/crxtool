@@ -61,11 +61,11 @@ public interface CrxPacker {
 
     /**
      * Gets a default instance. This currently returns a packer that packs
-     * a version 2 CRX, but that may change in a future release.
+     * a version 3 CRX.
      * @return a default instance
      */
     static CrxPacker getDefault() {
-        return getPackerInstance(CrxVersion.CRX2);
+        return getPackerInstance(CrxVersion.CRX3);
     }
 
     /**
@@ -85,7 +85,7 @@ public interface CrxPacker {
             case CRX2:
                 return Crx2Packer.getDefaultInstance();
             case CRX3:
-                throw new UnsupportedOperationException("CRX3 is not yet supported");
+                return Crx3Packer.getDefaultInstance();
             default:
                 throw new IllegalArgumentException(String.format("only version 2 is supported, not %s", version));
         }

@@ -38,7 +38,7 @@ public class Crx2PackerTest extends CrxPackerTestBase {
         baos.flush();
         byte[] headerBytes = baos.toByteArray();
         CrxMetadata metadata = CrxParser.getDefault().parseMetadata(new ByteArrayInputStream(headerBytes));
-        AsymmetricKeyProof proof = metadata.getFileHeader().getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).get(0);
+        AsymmetricKeyProof proof = metadata.getFileHeader().getAsymmetricKeyProofs(Crx2ProofAlgorithm.sha1_with_rsa).get(0);
         assertEquals("pubkey length", publicKeyBytes.length, proof.getPublicKeyLength());
         assertEquals("sig length", signature.length, proof.getSignatureLength());
     }

@@ -44,11 +44,10 @@ class Crx3Interpreter extends CrxInterpreterBase {
     private CrxMetadata parseFileHeader(byte[] headerBytes) throws IOException {
         Crx3.CrxFileHeader parsedHeader = Crx3.CrxFileHeader.parseFrom(headerBytes);
         CrxFileHeader fileHeader = new MessageFileHeader(parsedHeader);
-        AsymmetricKeyProof rsaProof = fileHeader.getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).stream().findFirst().orElse(null);
-        if (rsaProof == null) {
-            throw new CrxParsingException("header does not contain sha256_with_rsa asymmetric key proof");
-        }
-        HashCode pubkeyHash = hashBase64(SHA256, rsaProof.getPublicKeyBase64());
+        AsymmetricKeyProof proof = fileHeader.getAllAsymmetricKeyProofs().stream()
+                .findFirst().orElseThrow(() -> new CrxParsingException("header does not contain any asymmetric key proofs"))
+                .proof();
+        HashCode pubkeyHash = hashBase64(SHA256, proof.getPublicKeyBase64());
         String digest = pubkeyHash.toString().toLowerCase(Locale.ROOT);
         StringBuilder idBuilder = new StringBuilder(ID_LEN);
         translateDigestToId(digest, 0, ID_LEN, idBuilder);
