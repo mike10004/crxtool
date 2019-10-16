@@ -97,6 +97,8 @@
                     <configuration>
                         <systemPropertyVariables>
                             <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <wdm.chromeDriverVersion>${env.CHROMEDRIVER_VERSION}</wdm.chromeDriverVersion>
                         </systemPropertyVariables>
                     </configuration>
                 </plugin>
