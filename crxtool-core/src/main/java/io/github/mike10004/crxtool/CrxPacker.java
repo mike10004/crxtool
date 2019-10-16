@@ -75,7 +75,7 @@ public interface CrxPacker {
      * Only version 2 is currently supported.
      * @param version the version
      * @return the packer
-     * @deprecated use {@link }
+     * @deprecated use {@link #getPackerInstance(CrxVersion)} instead
      */
     @Deprecated
     static CrxPacker getPackerInstance(int version) {

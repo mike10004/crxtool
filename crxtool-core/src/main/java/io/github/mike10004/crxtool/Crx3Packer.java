@@ -4,7 +4,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.LittleEndianDataOutputStream;
-import com.google.common.primitives.Ints;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
 import io.github.mike10004.crxtool.message.Crx3;
@@ -28,8 +27,7 @@ public class Crx3Packer implements CrxPacker {
         Crx3.SignedData signedData = Crx3.SignedData.newBuilder()
                 .setCrxId(ByteString.copyFrom(crxId))
                 .build();
-        byte[] signedHeaderData = signedData.toByteArray();
-        byte[] signature = sign(zipBytes, signedHeaderData, keyPair);
+        byte[] signature = sign(zipBytes, signedData, keyPair);
         Crx3.AsymmetricKeyProof proof = Crx3.AsymmetricKeyProof.newBuilder()
                 .setPublicKey(getPublicKeyByteString(keyPair))
                 .setSignature(ByteString.copyFrom(signature))
@@ -37,7 +35,6 @@ public class Crx3Packer implements CrxPacker {
         Crx3.CrxFileHeader fileHeader = Crx3.CrxFileHeader.newBuilder()
                 .setSignedHeaderData(signedData.toByteString())
                 .addSha256WithRsa(proof)
-//                .setSha256WithRsa(0, proof)
                 .build();
 
         LittleEndianDataOutputStream leOutput = new LittleEndianDataOutputStream(output);
@@ -53,9 +50,10 @@ public class Crx3Packer implements CrxPacker {
         output.flush();
     }
 
+    /**
+     * See {@code crx3.proto}.
+     */
     protected byte[] deriveCrxId(KeyPair keyPair) {
-        // https://github.com/gromnitsky/crx3-utils/blob/master/index.js
-        // crypto.createHash('sha256').update(public_key).digest().slice(0, 16)
         byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
         byte[] hash = idHashFunction().hashBytes(publicKeyBytes).asBytes();
         byte[] id = new byte[CRX_ID_LEN];
@@ -63,7 +61,7 @@ public class Crx3Packer implements CrxPacker {
         return id;
     }
 
-    protected HashFunction idHashFunction() {
+    private static HashFunction idHashFunction() {
         return Hashing.sha256();
     }
 
@@ -72,26 +70,28 @@ public class Crx3Packer implements CrxPacker {
     private static final String CRYPTO_ALGORITHM = "RSA";
 
     /**
+     * From crx3.proto documentation:
+     * <pre>
      * All proofs are on the value:
      * "CRX3 SignedData\x00" + signed_header_size + signed_header_data + archive
-     * @param zipBytes
-     * @param signedHeaderData
-     * @param keyPair
-     * @return
-     * @throws IOException
-     * @throws SignatureException
-     * @throws InvalidKeyException
-     * @throws NoSuchAlgorithmException
+     * </pre>
+     * @param zipBytes zip archive byte source
+     * @param signedHeaderData signed header data
+     * @param keyPair the key pair
+     * @return the signature
+     * @throws IOException on I/O error
+     * @throws SignatureException on signature error
+     * @throws InvalidKeyException on invalid key
+     * @throws NoSuchAlgorithmException if algorithm spec is not valid
      */
-    protected byte[] sign(ByteSource zipBytes, byte[] signedHeaderData, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
+    protected byte[] sign(ByteSource zipBytes, Crx3.SignedData signedHeaderData, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
         byte[] payload = zipBytes.read();
-        int payloadLen = payload.length;
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(payload.length + 1024); // TODO compute actual expected size
         buffer.write("CRX3 SignedData".getBytes(StandardCharsets.UTF_8));
         buffer.write(new byte[]{0});
-        CrxPackers.writeLittleEndian(signedHeaderData.length, buffer);
-        // write PB tag?
-        buffer.write(signedHeaderData);
+        byte[] signedHeaderDataBytes = signedHeaderData.toByteArray();
+        CrxPackers.writeLittleEndian(signedHeaderDataBytes.length, buffer);
+        buffer.write(signedHeaderDataBytes);
         buffer.write(payload);
         byte[] data = buffer.toByteArray();
         return createSigner().sign(data, keyPair.getPrivate());

@@ -23,7 +23,7 @@ public class BasicCrxParser implements CrxParser {
      */
     public BasicCrxParser() {}
 
-    private void checkMagicNumber(String magicNumber) throws io.github.mike10004.crxtool.CrxParsingException {
+    private void checkMagicNumber(String magicNumber) throws CrxParsingException {
         if (!"Cr24".equals(magicNumber)) {
             try {
                 byte[] magicNumberBytes = magicNumber.getBytes(StandardCharsets.US_ASCII);

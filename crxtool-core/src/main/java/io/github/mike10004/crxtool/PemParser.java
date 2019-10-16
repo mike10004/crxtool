@@ -7,6 +7,11 @@ import java.io.Reader;
  * Interface of a service that parses a serialized private key.
  * File in {@code pem} format contain a base-64 encoding of the
  * key along with some garbage description lines.
+ * Requires a pem file with exactly one key in it, as opposed to
+ * a pem file that contains both private and public key explicitly.
+ * <p>Note that while this class will parse the key bytes out of any pem file,
+ * the method {@link KeyPairs#loadRsaPrivateKeyFromKeyBytes(byte[])} expects
+ * the key to be in PKCS8 format.</p>
  */
 public interface PemParser {
 
@@ -18,6 +23,10 @@ public interface PemParser {
      */
     byte[] extractBytes(Reader reader) throws IOException;
 
+    /**
+     * Gets a default implementation instance.
+     * @return a parser instance
+     */
     static PemParser getInstance() {
         return DefaultPemParser.getInstance();
     }
