@@ -123,6 +123,7 @@ public class Tests {
             referenceOnly.forEach((path, bs) -> out.format("only in reference: %s%n", path));
             queryOnly.forEach((path, bs) -> out.format("only in query: %s%n", path));
             differents.forEach(path -> out.format("different contents: %s%n", path));
+            org.apache.commons.io.FilenameUtils.class.getName();
         }
     }
 

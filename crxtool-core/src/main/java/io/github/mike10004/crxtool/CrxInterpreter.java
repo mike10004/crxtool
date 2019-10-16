@@ -5,6 +5,8 @@ import java.io.InputStream;
 
 /**
  * Interface of a service that parses metadata from an input stream.
+ * {@link BasicCrxParser} parses the version and then defers to
+ * an implementation of this interface to parse the rest of the metadata.
  */
 public interface CrxInterpreter {
 

@@ -1,7 +1,5 @@
 package io.github.mike10004.crxtool;
 
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
@@ -42,7 +40,7 @@ class ZippingFileVisitor implements FileVisitor<Path> {
 
     private String normalize(Path path) {
         Path relativeDir = enclosure.relativize(path);
-        return FilenameUtils.normalizeNoEndSeparator(relativeDir.toString(), true);
+        return CommonsIoFilenameUtils.normalizeNoEndSeparator(relativeDir.toString(), true);
     }
 
     @Override
