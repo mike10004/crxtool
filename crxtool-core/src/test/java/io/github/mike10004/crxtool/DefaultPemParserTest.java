@@ -2,6 +2,7 @@ package io.github.mike10004.crxtool;
 
 import com.google.common.io.ByteProcessor;
 import com.google.common.io.ByteSource;
+import com.google.common.io.CharSource;
 import com.google.common.io.Files;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,17 +26,13 @@ public class DefaultPemParserTest {
 
     @Test
     public void extractBytes() throws Exception {
-        File gzippedPemFile = new File(getClass().getResource("/key-for-testing.rsa.gz").toURI());
-        File pemFile = temporaryFolder.newFile("key.pem");
-        try (InputStream in = new GZIPInputStream(new FileInputStream(gzippedPemFile))) {
-            Files.asByteSink(pemFile).writeFrom(in);
-        }
+        CharSource pemSource = TestingKey.getTestingKeyPemSource();
         PemParser parser = new DefaultPemParser();
         byte[] bytes;
-        try (Reader reader = new InputStreamReader(new FileInputStream(pemFile), StandardCharsets.US_ASCII)) {
+        try (Reader reader = pemSource.openStream()) {
             bytes = parser.extractBytes(reader);
         }
-        assertEquals("num bytes", 1191, bytes.length);
+        assertEquals("num bytes", 1217, bytes.length);
         int numZeros = ByteSource.wrap(bytes).read(new ZeroCounter());
         assertNotEquals("num zeroes", bytes.length, numZeros);
     }
@@ -43,7 +40,6 @@ public class DefaultPemParserTest {
     private static class ZeroCounter implements ByteProcessor<Integer> {
         private int zeroCount = 0;
 
-        @SuppressWarnings("NullableProblems")
         @Override
         public boolean processBytes(byte[] buf, int off, int len) {
             for (byte b : buf) {

@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.common.io.ByteSource;
-import com.google.common.io.CharSource;
 import com.google.common.io.Files;
 import com.google.common.primitives.Longs;
 import io.github.mike10004.crxtool.testing.Unzippage;
@@ -15,12 +14,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.io.Reader;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
@@ -28,15 +24,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.zip.GZIPInputStream;
 
 public class Tests {
 
@@ -109,30 +102,6 @@ public class Tests {
         byte[] seedBytes = Longs.toByteArray(seed);
         SecureRandom random = new SecureRandom(seedBytes);
         return KeyPairs.generateRsaKeyPair(random);
-    }
-
-    public static KeyPair loadTestingKeyPair(String ...infixes) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
-        CharSource source = getTestingKeyPemSource(infixes);
-        byte[] pemBytes;
-        try (Reader reader = source.openStream()) {
-            pemBytes = PemParser.getInstance().extractBytes(reader);
-        }
-        return KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(pemBytes);
-    }
-
-    public static CharSource getTestingKeyPemSource(String...infixes) {
-        String infix = String.join(".", infixes);
-        String resourcePath = String.format("/key-for-testing%s.pem.gz", infix) ;
-        URL testingKeyGzipped = Tests.class.getResource(resourcePath);
-        if (testingKeyGzipped == null) {
-            throw new IllegalStateException("testing key not found at classpath:" + resourcePath);
-        }
-        return new CharSource() {
-            @Override
-            public Reader openStream() throws IOException {
-                return new InputStreamReader(new GZIPInputStream(testingKeyGzipped.openStream()), StandardCharsets.US_ASCII);
-            }
-        };
     }
 
     public static class DirDiff {

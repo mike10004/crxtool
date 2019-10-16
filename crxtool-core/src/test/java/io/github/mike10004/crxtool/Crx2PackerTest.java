@@ -5,6 +5,7 @@ import org.junit.Test;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
@@ -43,8 +44,8 @@ public class Crx2PackerTest extends CrxPackerTestBase {
     }
 
     @Override
-    protected CrxTestCase loadPackExtensionTestCase() throws InvalidKeySpecException, NoSuchAlgorithmException, URISyntaxException {
-        KeyPair keyPair = KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(TestKey.getPrivateKeyBytes());
+    protected CrxTestCase loadPackExtensionTestCase() throws InvalidKeySpecException, NoSuchAlgorithmException, URISyntaxException, IOException {
+        KeyPair keyPair = KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(TestingKey.getInstance().loadTestingKeyPrivateKeyBytes());
         File referenceCrxFile = new File(Tests.getMakePageRedCrxResource(CrxVersion.CRX2).toURI());
         return new CrxTestCase(referenceCrxFile, keyPair, true);
     }

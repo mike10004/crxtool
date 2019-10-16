@@ -93,6 +93,10 @@ public abstract class CrxPacker_WebDriverTestBase {
         }
     }
 
+    /**
+     * Copied from Chromium source code: https://chromium.googlesource.com/chromium/src.git/+/62.0.3178.1/components/crx_file/crx_verifier.h?autodive=0%2F%2F
+     */
+    @SuppressWarnings("unused")
     enum VerifierResult {
         OK_FULL,   // The file verifies as a correct full CRX file.
         OK_DELTA,  // The file verifies as a correct differential CRX file.
@@ -112,7 +116,7 @@ public abstract class CrxPacker_WebDriverTestBase {
         Path extensionDir = Tests.getAddFooterExtensionDir(packer.getCrxVersion());
         File extensionFile = File.createTempFile("BasicCrxPacker_WebDriverTest", ".crx");
         try (OutputStream output = new FileOutputStream(extensionFile)) {
-            KeyPair keyPair = Tests.loadTestingKeyPair("2");
+            KeyPair keyPair = TestingKey.getInstance().loadTestingKeyPair();
             createPacker().packExtension(extensionDir, keyPair, output);
         }
         return extensionFile;

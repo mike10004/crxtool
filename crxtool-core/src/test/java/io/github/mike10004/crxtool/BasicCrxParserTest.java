@@ -38,12 +38,12 @@ public class BasicCrxParserTest {
 
     @Test
     public void parseMetadata_crx2() throws Exception {
-        test_parseMetadata(CrxVersion.CRX2, "dnogaomdbgfngjgalaoggcfahgeibfdc");
+        test_parseMetadata(CrxVersion.CRX2, TestingKey.getInstance().getIdPmdecimal());
     }
 
     @Test
     public void parseMetadata_crx3() throws Exception {
-        test_parseMetadata(CrxVersion.CRX3, "fpmlidmjhnfgbgnfhofnbbiacmmmcdgl");
+        test_parseMetadata(CrxVersion.CRX3, TestingKey.getInstance().getIdPmdecimal());
     }
 
     private void test_parseMetadata(CrxVersion version, String expectedExtensionId) throws Exception {

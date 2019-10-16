@@ -22,7 +22,7 @@ public class Crx3PackerTest extends CrxPackerTestBase {
 
     @Override
     protected CrxTestCase loadPackExtensionTestCase() throws IOException, GeneralSecurityException, URISyntaxException {
-        String keyPem = Tests.getTestingKeyPemSource().read();
+        String keyPem = TestingKey.getTestingKeyPemSource().read();
         KeyPair keyPair = KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(PemParser.getInstance().extractBytes(new StringReader(keyPem)));
         File referenceCrxFile = new File(Tests.getMakePageRedCrxResource(CrxVersion.CRX3).toURI());
         return new CrxTestCase(referenceCrxFile, keyPair, false);
@@ -49,9 +49,5 @@ public class Crx3PackerTest extends CrxPackerTestBase {
         assertEquals("expect exactly 1 sha256_with_rsa proof", 1, proofs.size());
         AsymmetricKeyProof proof = proofs.get(0);
         assertEquals("public key base64", KeyPairs.encodePublicKeyBase64(packResult.keyPairUsedToSignFile), proof.getPublicKeyBase64());
-        int expectedHeaderLen = 333; // from empirical observation
-        long fileLen = crxFile.length();
-        int zipLen = zipBytes.length;
-        assertEquals(String.format("expected %s bytes in header, file is %s and zip is %s (diff %s)", expectedHeaderLen, fileLen, zipLen, fileLen - zipLen), expectedHeaderLen, fileLen - zipLen);
     }
 }
