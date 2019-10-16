@@ -6,7 +6,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.io.ByteSource;
 import com.google.common.io.CharSource;
 import com.google.common.io.Files;
-import com.google.common.io.Resources;
 import com.google.common.primitives.Longs;
 import io.github.mike10004.crxtool.testing.Unzippage;
 
@@ -38,7 +37,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.ZipInputStream;
 
 public class Tests {
 
@@ -133,44 +131,6 @@ public class Tests {
             @Override
             public Reader openStream() throws IOException {
                 return new InputStreamReader(new GZIPInputStream(testingKeyGzipped.openStream()), StandardCharsets.US_ASCII);
-            }
-        };
-    }
-
-    public static ParsingState fakeParsingState() {
-        return new ParsingState() {
-            @Override
-            public MarkScope markStart(String key) {
-                return new MarkScope() {
-                    @Override
-                    public void close() {
-                    }
-                };
-            }
-
-            @Override
-            public Mark markEnd(String key) {
-                return new Mark() {
-                    @Override
-                    public String label() {
-                        return key;
-                    }
-
-                    @Override
-                    public long start() {
-                        throw new UnsupportedOperationException();
-                    }
-
-                    @Override
-                    public long end() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-            }
-
-            @Override
-            public List<Mark> dump() {
-                return Collections.emptyList();
             }
         };
     }

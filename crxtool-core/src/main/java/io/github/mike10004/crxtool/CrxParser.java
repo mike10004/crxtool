@@ -1,7 +1,5 @@
 package io.github.mike10004.crxtool;
 
-import com.google.common.io.CountingInputStream;
-
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -29,6 +27,13 @@ public interface CrxParser {
         return inventory.metadata();
     }
 
+    /**
+     * Parses the extension metadata with stream segment annotations to return
+     * a CRX inventory instance.
+     * @param crxInputStream the input stream
+     * @return a new inventory instance
+     * @throws IOException if I/O goes awry
+     */
     CrxInventory parseInventory(InputStream crxInputStream) throws IOException;
 
     /**

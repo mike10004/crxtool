@@ -6,7 +6,7 @@ public interface CrxInventory {
 
     CrxMetadata metadata();
 
-    List<ParsingState.Mark> marks();
+    List<StreamSegment> streamSegments();
 
 }
 

@@ -39,7 +39,7 @@ public class BasicCrxParser implements CrxParser {
 
     protected String readMagicNumber(InputStream in, ParsingState state) throws IOException {
         byte[] magicNumberBytes = new byte[EXPECTED_MAGIC_NUMBER_LEN_BYTES];
-        try (MarkScope ignore = state.markStart("magicNumber")) {
+        try (SegmentMark ignore = state.markStart("magicNumber")) {
             ByteStreams.readFully(in, magicNumberBytes);
         }
         String magicNumber = new String(magicNumberBytes, StandardCharsets.US_ASCII);
@@ -62,7 +62,7 @@ public class BasicCrxParser implements CrxParser {
     protected CrxVersion readVersion(InputStream crxInput, ParsingState state) throws IOException {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
         int versionIdentifier;
-        try (MarkScope ignore = state.markStart("version")) {
+        try (SegmentMark ignore = state.markStart("version")) {
             versionIdentifier = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         }
         try {

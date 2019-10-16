@@ -5,9 +5,9 @@ import java.util.List;
 class BasicCrxInventory implements CrxInventory {
 
     private final CrxMetadata metadata;
-    private final List<ParsingState.Mark> marks;
+    private final List<StreamSegment> marks;
 
-    BasicCrxInventory(CrxMetadata metadata, List<ParsingState.Mark> marks) {
+    BasicCrxInventory(CrxMetadata metadata, List<StreamSegment> marks) {
         this.metadata = metadata;
         this.marks = marks;
     }
@@ -18,7 +18,7 @@ class BasicCrxInventory implements CrxInventory {
     }
 
     @Override
-    public List<ParsingState.Mark> marks() {
+    public List<StreamSegment> streamSegments() {
         return marks;
     }
 }

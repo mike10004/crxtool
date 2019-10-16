@@ -5,7 +5,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.io.ByteSource;
-import io.github.mike10004.crxtool.testing.Unzippage;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +31,7 @@ public class CrxReading {
 
     public Multimap<String, ByteSource> sliceAtMarks() {
         Multimap<String, ByteSource> mm = ArrayListMultimap.create();
-        for (ParsingState.Mark mark : inventory.marks()) {
+        for (StreamSegment mark : inventory.streamSegments()) {
             mm.put(mark.label(), bufferedCrxData.slice(mark.start(), mark.length()));
         }
         return mm;

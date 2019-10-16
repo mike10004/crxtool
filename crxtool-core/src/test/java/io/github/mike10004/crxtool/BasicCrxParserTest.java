@@ -186,7 +186,7 @@ public class BasicCrxParserTest {
         checkArgument(resource != null, "not found: classpath:%s", resourcePath);
         String magicNumber;
         try (InputStream crxInput = resource.openStream()) {
-            magicNumber = new BasicCrxParser().readMagicNumber(crxInput, Tests.fakeParsingState());
+            magicNumber = new BasicCrxParser().readMagicNumber(crxInput, EmptyParsingState.getInstance());
         }
         System.out.format("magic number %s from %s%n", magicNumber, resource);
         assertEquals("expected magic number", expectedMagicNumber, magicNumber);

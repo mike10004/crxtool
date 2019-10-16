@@ -4,7 +4,6 @@ import com.google.common.io.CountingInputStream;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -20,9 +19,9 @@ public class StreamParsingStateTest {
         StreamParsingState state = StreamParsingState.fromStream(in);
         String magicNumber = new BasicCrxParser().readMagicNumber(in, state);
         assertEquals("Cr24", magicNumber);
-        List<ParsingState.Mark> marks = state.dump();
+        List<StreamSegment> marks = state.dump();
         assertEquals(1, marks.size());
-        ParsingState.Mark actual = marks.get(0);
+        StreamSegment actual = marks.get(0);
         assertEquals("magicNumber", actual.label());
         assertEquals(0, actual.start());
         assertEquals(4, actual.end());

@@ -28,14 +28,14 @@ class Crx3Interpreter extends CrxInterpreterBase {
     public CrxMetadata parseMetadataAfterVersion(InputStream crxInput, ParsingState state) throws IOException {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
         int headerLen;
-        try (MarkScope ignore = state.markStart("fileHeaderLength")) {
+        try (SegmentMark ignore = state.markStart("fileHeaderLength")) {
             headerLen = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         }
         if (headerLen <= 0 || headerLen > MAX_SANE_HEADER_LEN) {
             throw new CrxParsingException(String.format("reported header length is insane: %s", headerLen));
         }
         byte[] headerBytes = new byte[headerLen];
-        try (MarkScope ignore = state.markStart("fileHeader")) {
+        try (SegmentMark ignore = state.markStart("fileHeader")) {
             ByteStreams.readFully(crxInput, headerBytes);
         }
         return parseFileHeader(headerBytes);
