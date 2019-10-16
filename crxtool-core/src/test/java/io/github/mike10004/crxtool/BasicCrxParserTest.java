@@ -51,7 +51,7 @@ public class BasicCrxParserTest {
         CrxMetadata metadata = parsedCrx.metadata;
         assertEquals("version", metadata.getCrxVersion(), version);
         Unzippage unzippage = parsedCrx.unzippage;
-        System.out.format("headerLength=%s%nid=%s%n%n", metadata.getFileHeader().length(), metadata.getId());
+        System.out.format("headerLength=%s%nid=%s%n%n", metadata.getFileHeader().numBytes(), metadata.getId());
         assertEquals("id", expectedExtensionId, metadata.getId());
         unzippage.allEntries().forEach(entry -> {
             System.out.format("%s%n", entry);
@@ -186,7 +186,7 @@ public class BasicCrxParserTest {
         checkArgument(resource != null, "not found: classpath:%s", resourcePath);
         String magicNumber;
         try (InputStream crxInput = resource.openStream()) {
-            magicNumber = new BasicCrxParser().readMagicNumber(crxInput);
+            magicNumber = new BasicCrxParser().readMagicNumber(crxInput, Tests.fakeParsingState());
         }
         System.out.format("magic number %s from %s%n", magicNumber, resource);
         assertEquals("expected magic number", expectedMagicNumber, magicNumber);

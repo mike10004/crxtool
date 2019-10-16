@@ -25,14 +25,23 @@ class Crx3Interpreter extends CrxInterpreterBase {
     }
 
     @Override
-    public CrxMetadata parseMetadataAfterVersion(InputStream crxInput) throws IOException {
+    public CrxMetadata parseMetadataAfterVersion(InputStream crxInput, ParsingState state) throws IOException {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
-        int headerLen = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
+        int headerLen;
+        try (MarkScope ignore = state.markStart("fileHeaderLength")) {
+            headerLen = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
+        }
         if (headerLen <= 0 || headerLen > MAX_SANE_HEADER_LEN) {
             throw new CrxParsingException(String.format("reported header length is insane: %s", headerLen));
         }
         byte[] headerBytes = new byte[headerLen];
-        ByteStreams.readFully(crxInput, headerBytes);
+        try (MarkScope ignore = state.markStart("fileHeader")) {
+            ByteStreams.readFully(crxInput, headerBytes);
+        }
+        return parseFileHeader(headerBytes);
+    }
+
+    private CrxMetadata parseFileHeader(byte[] headerBytes) throws IOException {
         Crx3.CrxFileHeader parsedHeader = Crx3.CrxFileHeader.parseFrom(headerBytes);
         CrxFileHeader fileHeader = new MessageFileHeader(parsedHeader);
         AsymmetricKeyProof rsaProof = fileHeader.getAsymmetricKeyProofs(MapFileHeader.ALGORITHM_SHA256_WITH_RSA).stream().findFirst().orElse(null);

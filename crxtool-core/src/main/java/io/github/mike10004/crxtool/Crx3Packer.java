@@ -1,5 +1,6 @@
 package io.github.mike10004.crxtool;
 
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteSource;
 import com.google.common.io.LittleEndianDataOutputStream;
@@ -24,18 +25,21 @@ public class Crx3Packer implements CrxPacker {
     @Override
     public void packExtension(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
         byte[] crxId = deriveCrxId(keyPair);
-        byte[] signature = sign(zipBytes, crxId, keyPair);
+        Crx3.SignedData signedData = Crx3.SignedData.newBuilder()
+                .setCrxId(ByteString.copyFrom(crxId))
+                .build();
+        byte[] signedHeaderData = signedData.toByteArray();
+        byte[] signature = sign(zipBytes, signedHeaderData, keyPair);
         Crx3.AsymmetricKeyProof proof = Crx3.AsymmetricKeyProof.newBuilder()
                 .setPublicKey(getPublicKeyByteString(keyPair))
                 .setSignature(ByteString.copyFrom(signature))
                 .build();
-        Crx3.SignedData signedData = Crx3.SignedData.newBuilder()
-                .setCrxId(ByteString.copyFrom(crxId))
-                .build();
         Crx3.CrxFileHeader fileHeader = Crx3.CrxFileHeader.newBuilder()
                 .setSignedHeaderData(signedData.toByteString())
                 .addSha256WithRsa(proof)
+//                .setSha256WithRsa(0, proof)
                 .build();
+
         LittleEndianDataOutputStream leOutput = new LittleEndianDataOutputStream(output);
         CrxPackers.writeMagicNumber(leOutput, MAGIC_NUMBER);
         CrxPackers.writeFormatVersion(leOutput, getCrxVersion());
@@ -53,22 +57,41 @@ public class Crx3Packer implements CrxPacker {
         // https://github.com/gromnitsky/crx3-utils/blob/master/index.js
         // crypto.createHash('sha256').update(public_key).digest().slice(0, 16)
         byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
-        byte[] hash = Hashing.sha256().hashBytes(publicKeyBytes).asBytes();
-        return hash;
+        byte[] hash = idHashFunction().hashBytes(publicKeyBytes).asBytes();
+        byte[] id = new byte[CRX_ID_LEN];
+        System.arraycopy(hash, 0, id, 0, Math.min(id.length, hash.length));
+        return id;
     }
 
+    protected HashFunction idHashFunction() {
+        return Hashing.sha256();
+    }
+
+    private static final int CRX_ID_LEN = 16;
     private static final String HASH_FUNCTION = "SHA256";
     private static final String CRYPTO_ALGORITHM = "RSA";
 
-    protected byte[] sign(ByteSource zipBytes, byte[] crxId, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
+    /**
+     * All proofs are on the value:
+     * "CRX3 SignedData\x00" + signed_header_size + signed_header_data + archive
+     * @param zipBytes
+     * @param signedHeaderData
+     * @param keyPair
+     * @return
+     * @throws IOException
+     * @throws SignatureException
+     * @throws InvalidKeyException
+     * @throws NoSuchAlgorithmException
+     */
+    protected byte[] sign(ByteSource zipBytes, byte[] signedHeaderData, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
         byte[] payload = zipBytes.read();
         int payloadLen = payload.length;
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(payload.length + 1024); // TODO compute actual expected size
-        buffer.write("CRX3 SignedData".getBytes(StandardCharsets.US_ASCII));
+        buffer.write("CRX3 SignedData".getBytes(StandardCharsets.UTF_8));
         buffer.write(new byte[]{0});
-        CrxPackers.writeLittleEndian(crxId.length, buffer);
+        CrxPackers.writeLittleEndian(signedHeaderData.length, buffer);
         // write PB tag?
-        buffer.write(crxId);
+        buffer.write(signedHeaderData);
         buffer.write(payload);
         byte[] data = buffer.toByteArray();
         return createSigner().sign(data, keyPair.getPrivate());

@@ -14,7 +14,7 @@ public interface CrxInterpreter {
      * @return a metadata object
      * @throws IOException if I/O fails
      */
-    CrxMetadata parseMetadataAfterVersion(InputStream crxInput) throws IOException;
+    CrxMetadata parseMetadataAfterVersion(InputStream crxInput, ParsingState state) throws IOException;
 
     /**
      * Exception thrown if the version specified by a CRX file is not supported.

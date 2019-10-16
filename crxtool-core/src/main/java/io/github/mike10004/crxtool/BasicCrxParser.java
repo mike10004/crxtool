@@ -2,6 +2,7 @@ package io.github.mike10004.crxtool;
 
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CountingInputStream;
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.primitives.Ints;
 import com.google.common.primitives.UnsignedInteger;
@@ -36,28 +37,39 @@ public class BasicCrxParser implements CrxParser {
 
     private static final int EXPECTED_MAGIC_NUMBER_LEN_BYTES = 4;
 
-    protected String readMagicNumber(InputStream in) throws IOException {
+    protected String readMagicNumber(InputStream in, ParsingState state) throws IOException {
         byte[] magicNumberBytes = new byte[EXPECTED_MAGIC_NUMBER_LEN_BYTES];
-        ByteStreams.readFully(in, magicNumberBytes);
+        try (MarkScope ignore = state.markStart("magicNumber")) {
+            ByteStreams.readFully(in, magicNumberBytes);
+        }
         String magicNumber = new String(magicNumberBytes, StandardCharsets.US_ASCII);
         return magicNumber;
     }
 
     @Override
-    public CrxMetadata parseMetadata(InputStream crxInput) throws IOException {
-        String magicNumber = readMagicNumber(crxInput);
+    public CrxInventory parseInventory(InputStream crxInput) throws IOException {
+        CountingInputStream counter = new CountingInputStream(crxInput);
+        ParsingState state = StreamParsingState.fromStream(counter);
+        crxInput = counter;
+        String magicNumber = readMagicNumber(crxInput, state);
         checkMagicNumber(magicNumber);
+        CrxVersion version = readVersion(crxInput, state);
+        CrxInterpreter interpreter = getCrxInterpreter(magicNumber, version);
+        CrxMetadata metadata = interpreter.parseMetadataAfterVersion(crxInput, state);
+        return new BasicCrxInventory(metadata, state.dump());
+    }
+
+    protected CrxVersion readVersion(InputStream crxInput, ParsingState state) throws IOException {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
-        int versionIdentifier = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
-        CrxVersion version;
+        int versionIdentifier;
+        try (MarkScope ignore = state.markStart("version")) {
+            versionIdentifier = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
+        }
         try {
-            version = CrxVersion.fromIdentifier(versionIdentifier);
+            return CrxVersion.fromIdentifier(versionIdentifier);
         } catch (IllegalArgumentException e) {
             throw new CrxParsingException(e);
         }
-        CrxInterpreter interpreter = getCrxInterpreter(magicNumber, version);
-        CrxMetadata metadata = interpreter.parseMetadataAfterVersion(crxInput);
-        return metadata;
     }
 
     protected CrxInterpreter getCrxInterpreter(String magicNumber, CrxVersion version) throws CrxInterpreter.UnsupportedCrxVersionException {

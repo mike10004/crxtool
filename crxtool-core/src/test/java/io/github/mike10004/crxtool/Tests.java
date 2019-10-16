@@ -31,6 +31,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -132,6 +133,44 @@ public class Tests {
             @Override
             public Reader openStream() throws IOException {
                 return new InputStreamReader(new GZIPInputStream(testingKeyGzipped.openStream()), StandardCharsets.US_ASCII);
+            }
+        };
+    }
+
+    public static ParsingState fakeParsingState() {
+        return new ParsingState() {
+            @Override
+            public MarkScope markStart(String key) {
+                return new MarkScope() {
+                    @Override
+                    public void close() {
+                    }
+                };
+            }
+
+            @Override
+            public Mark markEnd(String key) {
+                return new Mark() {
+                    @Override
+                    public String label() {
+                        return key;
+                    }
+
+                    @Override
+                    public long start() {
+                        throw new UnsupportedOperationException();
+                    }
+
+                    @Override
+                    public long end() {
+                        throw new UnsupportedOperationException();
+                    }
+                };
+            }
+
+            @Override
+            public List<Mark> dump() {
+                return Collections.emptyList();
             }
         };
     }

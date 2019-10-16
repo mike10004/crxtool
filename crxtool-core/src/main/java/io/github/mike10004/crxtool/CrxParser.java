@@ -1,5 +1,7 @@
 package io.github.mike10004.crxtool;
 
+import com.google.common.io.CountingInputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -22,7 +24,12 @@ public interface CrxParser {
      * @return the metadata
      * @throws IOException if reading from the stream fails
      */
-    CrxMetadata parseMetadata(InputStream crxInputStream) throws IOException;
+    default CrxMetadata parseMetadata(InputStream crxInputStream) throws IOException {
+        CrxInventory inventory = parseInventory(crxInputStream);
+        return inventory.metadata();
+    }
+
+    CrxInventory parseInventory(InputStream crxInputStream) throws IOException;
 
     /**
      * Gets a default (immutable) parser instance.
@@ -32,7 +39,4 @@ public interface CrxParser {
         return BasicCrxParser.getDefaultInstance();
     }
 
-    static String getMagicNumber() {
-        return "Crx24";
-    }
 }

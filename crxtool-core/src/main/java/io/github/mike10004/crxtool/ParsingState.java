@@ -1,31 +1,29 @@
 package io.github.mike10004.crxtool;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.CountingInputStream;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.LongSupplier;
-import java.util.function.Supplier;
+
+import static com.google.common.base.Preconditions.checkState;
+import static java.util.Objects.requireNonNull;
 
 interface ParsingState {
 
-    void markStart(String key);
+    MarkScope markStart(String key);
 
-    String markEnd();
-
-    default void markEndChecked(String key) {
-        String currentLabel = markEnd();
-        if (!Objects.equals(key, currentLabel)) {
-            throw new IllegalArgumentException("end label does not match start label: end " + key + " but started " + currentLabel);
-        }
-    }
-
+    Mark markEnd(String key);
 
     interface Mark {
         String label();
         long start();
         long end();
+        default long length() {
+            return end() - start();
+        }
     }
 
     List<Mark> dump();
@@ -57,7 +55,13 @@ class StreamMark implements ParsingState.Mark {
     }
 }
 
+interface MarkScope extends AutoCloseable {
+    @Override
+    void close();
+}
+
 class PartialMark {
+
     public final String label;
     public final long start;
 
@@ -73,34 +77,60 @@ class PartialMark {
 
 class StreamParsingState implements ParsingState {
 
-    private PartialMark current;
+    private volatile MyMarkScope scope;
     private final LongSupplier positionGetter;
     private final List<Mark> completedMarks = new ArrayList<>();
 
     public StreamParsingState(LongSupplier positionGetter) {
-        this.positionGetter = positionGetter;
+        this.positionGetter = requireNonNull(positionGetter);
     }
 
-    @Override
-    public synchronized void markStart(String key) {
-        long position = positionGetter.getAsLong();
-        if (current != null) {
-            completeCurrent(position);
+    public static StreamParsingState fromStream(CountingInputStream in) {
+        return new StreamParsingState(in::getCount);
+    }
+
+    private class MyMarkScope implements MarkScope {
+
+        private final PartialMark partial;
+
+        private MyMarkScope(PartialMark partial) {
+            this.partial = partial;
         }
-        current = new PartialMark(key, position);
-    }
 
-    private Mark completeCurrent(long position) {
-        Mark completed = current.complete(position);
-        completedMarks.add(completed);
-        current = null;
-        return completed;
+        @Override
+        public final void close() {
+            closeAndReturnCompletedMark();
+        }
+
+        public final Mark closeAndReturnCompletedMark() {
+            checkState(this == scope, "this is not the current scope");
+            scope = null;
+            long position = positionGetter.getAsLong();
+            Mark completed = partial.complete(position);
+            completedMarks.add(completed);
+            return completed;
+        }
     }
 
     @Override
-    public synchronized String markEnd() {
-        Mark completed = completeCurrent(positionGetter.getAsLong());
-        return completed.label();
+    public synchronized MarkScope markStart(String key) {
+        long position = positionGetter.getAsLong();
+        if (scope != null) {
+            scope.close();
+        }
+        scope = new MyMarkScope(new PartialMark(key, position));
+        return scope;
+    }
+
+
+    @Override
+    public synchronized Mark markEnd(String label) {
+        checkState(scope != null, "no mark started");
+        Mark mark = scope.closeAndReturnCompletedMark();
+        if (!Objects.equals(label, mark.label())) {
+            throw new IllegalStateException(String.format("end label does not match start label: end %s != %s start", label, mark.label()));
+        }
+        return mark;
     }
 
     @Override

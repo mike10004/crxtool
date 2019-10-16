@@ -21,7 +21,7 @@ class Crx2Interpreter extends CrxInterpreterBase {
     }
 
     @Override
-    public CrxMetadata parseMetadataAfterVersion(InputStream crxInput) throws IOException {
+    public CrxMetadata parseMetadataAfterVersion(InputStream crxInput, ParsingState state) throws IOException {
         LittleEndianDataInputStream in = new LittleEndianDataInputStream(crxInput);
         int pubkeyLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
         int signatureLength = Ints.checkedCast(UnsignedInteger.fromIntBits(in.readInt()).longValue());
