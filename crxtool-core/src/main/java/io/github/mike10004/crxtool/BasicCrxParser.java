@@ -23,7 +23,6 @@ public class BasicCrxParser implements CrxParser {
     public BasicCrxParser() {}
 
     private void checkMagicNumber(String magicNumber) throws io.github.mike10004.crxtool.CrxParsingException {
-//        if (!CrxParser.getMagicNumber().equals(magicNumber)) {
         if (!"Cr24".equals(magicNumber)) {
             try {
                 byte[] magicNumberBytes = magicNumber.getBytes(StandardCharsets.US_ASCII);
@@ -69,30 +68,6 @@ public class BasicCrxParser implements CrxParser {
                 return new Crx3Interpreter(magicNumber);
             default:
                 throw new CrxInterpreter.UnsupportedCrxVersionException("version " + version + " is not supported");
-        }
-    }
-
-    /**
-     * Interface of a service that parses metadata from an input stream.
-     */
-    protected interface CrxInterpreter {
-
-        /**
-         * Parses the metadata that follows the version entry in the packed binary file format.
-         * @param crxInput input stream positioned immediately after the version
-         * @return a metadata object
-         * @throws IOException if I/O fails
-         */
-        CrxMetadata parseMetadataAfterVersion(InputStream crxInput) throws IOException;
-
-        /**
-         * Exception thrown if the version specified by a CRX file is not supported.
-         */
-        class UnsupportedCrxVersionException extends io.github.mike10004.crxtool.CrxParsingException {
-
-            public UnsupportedCrxVersionException(String message) {
-                super(message);
-            }
         }
     }
 

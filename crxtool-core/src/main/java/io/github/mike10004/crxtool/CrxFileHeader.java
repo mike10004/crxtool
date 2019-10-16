@@ -18,10 +18,22 @@ public interface CrxFileHeader {
      */
     List<AsymmetricKeyProof> getAsymmetricKeyProofs(String algorithm);
 
+    default List<AsymmetricKeyProof> getAsymmetricKeyProofs(CrxProofAlgorithm algorithm) {
+        return getAsymmetricKeyProofs(algorithm.crxFileHeaderKey());
+    }
+
     /**
      * Gets the count of bytes in the packed binary form of this header instance.
      * @return the file header length, in bytes
      */
-    int length();
+    int numBytes();
+
+    /**
+     * @deprecated use {@link #numBytes()}; changed to avoid confusion with proof list length
+     */
+    @Deprecated
+    default int length() {
+        return numBytes();
+    }
 
 }

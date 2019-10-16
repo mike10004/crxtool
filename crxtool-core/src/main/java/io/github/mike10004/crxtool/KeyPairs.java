@@ -28,6 +28,12 @@ public class KeyPairs {
 
     private KeyPairs() {}
 
+    public static PrivateKey loadRsaPrivateKeyFromKeyBytes(byte[] privateKeyBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(keySpec);
+    }
+
     /**
      * Loads an RSA key pair from a byte array that constitutes the private key.
      * @param privateKeyBytes the private key bytes
@@ -36,9 +42,7 @@ public class KeyPairs {
      * @throws InvalidKeySpecException if thrown by {@link KeyFactory#generatePrivate(KeySpec)} on a {@link PKCS8EncodedKeySpec} instance
      */
     public static KeyPair loadRsaKeyPairFromPrivateKeyBytes(byte[] privateKeyBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+        PrivateKey privateKey = loadRsaPrivateKeyFromKeyBytes(privateKeyBytes);
         PublicKey publicKey = extractPublicKey(privateKey);
         return new KeyPair(publicKey, privateKey);
     }
@@ -69,5 +73,9 @@ public class KeyPairs {
             throw new AssertionError("IOException shouldn't be thrown by memory-only input streams");
         }
         return len;
+    }
+
+    public static String encodePublicKeyBase64(KeyPair keyPair) {
+        return BaseEncoding.base64().encode(keyPair.getPublic().getEncoded());
     }
 }

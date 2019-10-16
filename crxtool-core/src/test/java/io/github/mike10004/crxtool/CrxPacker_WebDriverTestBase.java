@@ -23,8 +23,10 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -40,12 +42,17 @@ public abstract class CrxPacker_WebDriverTestBase {
 
     @Test
     public void packAndUseExtension() throws Exception {
+        File crxFile = packExtension();
+        packAndUseExtension(crxFile);
+    }
+
+    protected void packAndUseExtension(File crxFile) throws Exception {
+        Tests.dumpCrxInfo(crxFile, System.out);
         ChromeDriverService driverService = new ChromeDriverService.Builder()
                 .withEnvironment(xvfb.getController().newEnvironment())
                 .build();
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--no-sandbox");
-        File crxFile = packExtension();
         options.addExtensions(crxFile);
         String html = "<!DOCTYPE html>" +
                 "<html>" +
@@ -72,12 +79,13 @@ public abstract class CrxPacker_WebDriverTestBase {
 
     protected abstract CrxPacker createPacker();
 
-    private File packExtension() throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+    private File packExtension() throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException, InvalidKeySpecException {
         CrxPacker packer = createPacker();
         Path extensionDir = Tests.getAddFooterExtensionDir(packer.getCrxVersion());
         File extensionFile = File.createTempFile("BasicCrxPacker_WebDriverTest", ".crx");
         try (OutputStream output = new FileOutputStream(extensionFile)) {
-            createPacker().packExtension(extensionDir, Tests.generateRsaKeyPair(getClass().hashCode()), output);
+            KeyPair keyPair = Tests.loadTestingKeyPair("2");
+            createPacker().packExtension(extensionDir, keyPair, output);
         }
         return extensionFile;
     }

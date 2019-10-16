@@ -44,17 +44,17 @@ public class CrxPackersTest {
         assertArrayEquals("version encoding", expected, actual);
     }
 
-    @Test
-    public void testSign() throws Exception {
-        byte[] data = "This is the data".getBytes(StandardCharsets.US_ASCII);
-        KeyPair keyPair = Tests.generateRsaKeyPair(0x12345);
-        SecureRandom random = new SecureRandom(Ints.toByteArray(0x54321));
-        List<byte[]> results = new ArrayList<>();
-        for (int i = 0; i < 2; i++) {
-            Signature signature = Signature.getInstance("SHA256WithRSA");
-            byte[] signatureBytes = CrxPackers.sign(ByteSource.wrap(data), keyPair, signature, random);
-            results.add(signatureBytes);
-            System.out.format("%s%n", BaseEncoding.base16().encode(signatureBytes));
-        }
-    }
+//    @Test
+//    public void testSign() throws Exception {
+//        byte[] data = "This is the data".getBytes(StandardCharsets.US_ASCII);
+//        KeyPair keyPair = Tests.generateRsaKeyPair(0x12345);
+//        SecureRandom random = new SecureRandom(Ints.toByteArray(0x54321));
+//        List<byte[]> results = new ArrayList<>();
+//        for (int i = 0; i < 2; i++) {
+//            Signature signature = Signature.getInstance("SHA256WithRSA");
+//            byte[] signatureBytes = CrxPackers.sign(ByteSource.wrap(data), keyPair, signature, random);
+//            results.add(signatureBytes);
+//            System.out.format("%s%n", BaseEncoding.base16().encode(signatureBytes));
+//        }
+//    }
 }

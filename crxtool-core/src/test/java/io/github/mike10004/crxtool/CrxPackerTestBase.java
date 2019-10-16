@@ -46,10 +46,25 @@ public abstract class CrxPackerTestBase {
         }
     }
 
+    public static class PackResult {
+
+        public final File crxFile;
+        public final KeyPair keyPairUsedToSignFile;
+
+        public PackResult(File crxFile, KeyPair keyPairUsedToSignFile) {
+            this.crxFile = crxFile;
+            this.keyPairUsedToSignFile = keyPairUsedToSignFile;
+        }
+    }
+
     protected abstract CrxTestCase loadPackExtensionTestCase() throws IOException, GeneralSecurityException, URISyntaxException;
 
     @Test
     public void packExtension() throws Exception {
+        doPackExtensionTest();
+    }
+
+    protected PackResult doPackExtensionTest() throws GeneralSecurityException, IOException, URISyntaxException {
         CrxTestCase testCase = loadPackExtensionTestCase();
         File referenceCrxFile = testCase.referenceCrxFile;
         File extensionZipFile = Tests.chopZipFromCrx(referenceCrxFile);
@@ -73,6 +88,7 @@ public abstract class CrxPackerTestBase {
             assertEquals("signature", expectedProof.getSignatureBase64(), actualProof.getSignatureBase64());
             assertTrue("crx bytes", Files.asByteSource(referenceCrxFile).contentEquals(Files.asByteSource(extensionFile)));
         }
+        return new PackResult(extensionFile, keyPair);
     }
 
     @Test

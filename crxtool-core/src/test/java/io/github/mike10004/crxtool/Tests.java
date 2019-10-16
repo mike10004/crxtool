@@ -2,9 +2,13 @@ package io.github.mike10004.crxtool;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Ordering;
 import com.google.common.io.ByteSource;
+import com.google.common.io.CharSource;
 import com.google.common.io.Files;
+import com.google.common.io.Resources;
 import com.google.common.primitives.Longs;
+import io.github.mike10004.crxtool.testing.Unzippage;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -12,9 +16,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
@@ -22,12 +29,15 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipInputStream;
 
 public class Tests {
 
@@ -55,8 +65,25 @@ public class Tests {
         return choppedFile;
     }
 
+    public static File getAddFooterExtensionFile(CrxVersion version) {
+        try {
+            return new File(getAddFooterCrxResource(version).toURI());
+        } catch (URISyntaxException e) {
+            throw new AssertionError(e);
+        }
+    }
+
     public static URL getMakePageRedCrxResource(CrxVersion version) {
-        return Objects.requireNonNull(Tests.class.getResource("/make_page_red." + version.name().toLowerCase()), "classpath:/make_page_red.crx resource not found");
+        return getCrxResource("make_page_red", version);
+    }
+
+    public static URL getAddFooterCrxResource(CrxVersion version) {
+        return getCrxResource("add_footer", version);
+    }
+
+    public static URL getCrxResource(String name, CrxVersion version) {
+        String resourcePath = String.format("/%s.%s", name, version.name().toLowerCase());
+        return Objects.requireNonNull(Tests.class.getResource(resourcePath), () -> "not found: " + resourcePath);
     }
 
     public static File getMakePageRedCrxFile(CrxVersion version) {
@@ -83,6 +110,30 @@ public class Tests {
         byte[] seedBytes = Longs.toByteArray(seed);
         SecureRandom random = new SecureRandom(seedBytes);
         return KeyPairs.generateRsaKeyPair(random);
+    }
+
+    public static KeyPair loadTestingKeyPair(String ...infixes) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+        CharSource source = getTestingKeyPemSource(infixes);
+        byte[] pemBytes;
+        try (Reader reader = source.openStream()) {
+            pemBytes = PemParser.getInstance().extractBytes(reader);
+        }
+        return KeyPairs.loadRsaKeyPairFromPrivateKeyBytes(pemBytes);
+    }
+
+    public static CharSource getTestingKeyPemSource(String...infixes) {
+        String infix = String.join(".", infixes);
+        String resourcePath = String.format("/key-for-testing%s.pem.gz", infix) ;
+        URL testingKeyGzipped = Tests.class.getResource(resourcePath);
+        if (testingKeyGzipped == null) {
+            throw new IllegalStateException("testing key not found at classpath:" + resourcePath);
+        }
+        return new CharSource() {
+            @Override
+            public Reader openStream() throws IOException {
+                return new InputStreamReader(new GZIPInputStream(testingKeyGzipped.openStream()), StandardCharsets.US_ASCII);
+            }
+        };
     }
 
     public static class DirDiff {
@@ -232,5 +283,39 @@ public class Tests {
             return resource;
         }
 
+    }
+
+    public static void dumpCrxInfo(File crxFile, PrintStream out) throws IOException {
+        out.format("crx file: %s%n", crxFile);
+        dumpCrxInfo(Files.asByteSource(crxFile), out);
+    }
+
+    public static void dumpCrxInfo(ByteSource crxByteSource, PrintStream out) throws IOException {
+        try (InputStream in = crxByteSource.openStream()) {
+            CrxMetadata md = CrxParser.getDefault().parseMetadata(in);
+            out.format("version:    %s%n", md.getCrxVersion().identifier());
+            out.format("id:         %s%n", md.getId());
+            out.format("magic:      %s%n", md.getMagicNumber());
+            CrxFileHeader header = md.getFileHeader();
+            out.format("header len: %s%n", header.numBytes());
+            for (CrxProofAlgorithm proofAlgo : CrxProofAlgorithm.allKnown()) {
+                List<AsymmetricKeyProof> proofs = header.getAsymmetricKeyProofs(proofAlgo);
+                for (int i = 0; i < proofs.size(); i++) {
+                    AsymmetricKeyProof proof = proofs.get(i);
+                    out.format("proof: %s %s len=%s%n", proofAlgo, i, proof.getCombinedLength());
+                }
+            }
+        }
+    }
+
+    public static void dumpZipInfo(ByteSource zipByteSource, PrintStream out) throws IOException {
+        Unzippage unzippage;
+        try (InputStream in = zipByteSource.openStream()) {
+            unzippage = Unzippage.unzip(in);
+        }
+        List<String> zipEntries = Ordering.natural().immutableSortedCopy(unzippage.fileEntries());
+        for (String zipEntry : zipEntries) {
+            out.println(zipEntry);
+        }
     }
 }

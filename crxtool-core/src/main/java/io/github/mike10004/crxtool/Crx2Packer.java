@@ -61,9 +61,15 @@ public class Crx2Packer implements CrxPacker {
         output.write(signature);
     }
 
+    private static final String HASH_FUNCTION = "SHA1";
+    private static final String CRYPTO_ALGORITHM = "RSA";
+
     protected byte[] sign(ByteSource zipBytes, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
-        Signature sig = Signature.getInstance("SHA1WithRSA");
-        return CrxPackers.sign(zipBytes, keyPair, sig);
+        return createSigner().sign(zipBytes.read(), keyPair.getPrivate());
+    }
+
+    protected Signer createSigner() {
+        return new BasicSigner(HASH_FUNCTION, CRYPTO_ALGORITHM);
     }
 
     @Override

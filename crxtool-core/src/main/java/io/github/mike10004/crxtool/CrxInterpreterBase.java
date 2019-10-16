@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 import static java.util.Objects.requireNonNull;
 
-abstract class CrxInterpreterBase implements BasicCrxParser.CrxInterpreter {
+abstract class CrxInterpreterBase implements CrxInterpreter {
 
     protected static final int ID_LEN = 32;
     protected static final char[] DIGEST_CHARS = "0123456789abcdef".toCharArray();

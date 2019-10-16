@@ -24,7 +24,7 @@ class MapFileHeader implements CrxFileHeader {
     }
 
     @Override
-    public int length() {
+    public int numBytes() {
         return proofs.values().stream().mapToInt(AsymmetricKeyProof::getCombinedLength).sum();
     }
 

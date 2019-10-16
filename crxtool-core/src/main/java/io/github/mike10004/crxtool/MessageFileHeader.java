@@ -35,7 +35,7 @@ class MessageFileHeader implements CrxFileHeader {
     }
 
     @Override
-    public int length() {
+    public int numBytes() {
         return message.getSerializedSize();
     }
 
