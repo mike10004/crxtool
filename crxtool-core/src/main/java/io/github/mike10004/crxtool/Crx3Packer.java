@@ -2,7 +2,6 @@ package io.github.mike10004.crxtool;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
 import com.google.common.io.LittleEndianDataOutputStream;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.CodedOutputStream;
@@ -22,7 +21,7 @@ public class Crx3Packer implements CrxPacker {
     private static final String MAGIC_NUMBER = CrxPackers.MAGIC_NUMBER;
 
     @Override
-    public void packExtension(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
+    public void packExtension(InputSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
         byte[] crxId = deriveCrxId(keyPair);
         Crx3.SignedData signedData = Crx3.SignedData.newBuilder()
                 .setCrxId(ByteString.copyFrom(crxId))
@@ -84,7 +83,7 @@ public class Crx3Packer implements CrxPacker {
      * @throws InvalidKeyException on invalid key
      * @throws NoSuchAlgorithmException if algorithm spec is not valid
      */
-    protected byte[] sign(ByteSource zipBytes, Crx3.SignedData signedHeaderData, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
+    protected byte[] sign(InputSource zipBytes, Crx3.SignedData signedHeaderData, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
         byte[] payload = zipBytes.read();
         ByteArrayOutputStream buffer = new ByteArrayOutputStream(payload.length + 1024); // TODO compute actual expected size
         buffer.write("CRX3 SignedData".getBytes(StandardCharsets.UTF_8));

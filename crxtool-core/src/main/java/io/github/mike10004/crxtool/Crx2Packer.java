@@ -1,15 +1,12 @@
 package io.github.mike10004.crxtool;
 
-import com.google.common.io.ByteSource;
 import com.google.common.io.LittleEndianDataOutputStream;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
-import java.security.Signature;
 import java.security.SignatureException;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -37,12 +34,12 @@ public class Crx2Packer implements CrxPacker {
     }
 
     @Override
-    public void packExtension(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
+    public void packExtension(InputSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException {
         writeExtensionHeader(zipBytes, keyPair, output);
         zipBytes.copyTo(output);
     }
 
-    protected void writeExtensionHeader(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+    protected void writeExtensionHeader(InputSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
         byte[] publicKeyBytes = keyPair.getPublic().getEncoded();
         byte[] signature = sign(zipBytes, keyPair);
         writeExtensionHeader(publicKeyBytes, signature, output);
@@ -64,7 +61,7 @@ public class Crx2Packer implements CrxPacker {
     private static final String HASH_FUNCTION = "SHA1";
     private static final String CRYPTO_ALGORITHM = "RSA";
 
-    protected byte[] sign(ByteSource zipBytes, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
+    protected byte[] sign(InputSource zipBytes, KeyPair keyPair) throws IOException, SignatureException, InvalidKeyException, NoSuchAlgorithmException {
         return createSigner().sign(zipBytes.read(), keyPair.getPrivate());
     }
 

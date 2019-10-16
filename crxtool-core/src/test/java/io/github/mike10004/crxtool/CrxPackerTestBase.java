@@ -23,7 +23,6 @@ import java.util.zip.ZipFile;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -73,7 +72,7 @@ public abstract class CrxPackerTestBase {
         KeyPair keyPair = testCase.keyPairUsedToSignFile;
         File extensionFile = File.createTempFile("crxtool-unit-test", ".crx", temporaryFolder.getRoot());
         try (OutputStream outputStream = new FileOutputStream(extensionFile)) {
-            packer.packExtension(extensionZip, keyPair, outputStream);
+            packer.packExtension(extensionZip::openStream, keyPair, outputStream);
         }
         CrxMetadata actualMetadata = readMetadata(extensionFile);
         CrxMetadata expectedMetadata = readMetadata(referenceCrxFile);

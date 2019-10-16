@@ -1,7 +1,5 @@
 package io.github.mike10004.crxtool;
 
-import com.google.common.io.ByteSource;
-
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -45,7 +43,7 @@ public interface CrxPacker {
      */
     default void packExtension(Path extensionDir, @Nullable ZipConfig zipConfig, KeyPair keyPair, OutputStream output) throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         byte[] zipBytes = Zipping.zipDirectory(extensionDir, zipConfig);
-        packExtension(ByteSource.wrap(zipBytes), keyPair, output);
+        packExtension(InputSource.wrap(zipBytes), keyPair, output);
     }
 
     /**
@@ -59,7 +57,7 @@ public interface CrxPacker {
      * @throws SignatureException if thrown by {@link java.security.Signature#update(byte[])} or {@link Signature#sign()}
      * @see KeyPairs#loadRsaKeyPairFromPrivateKeyBytes(byte[])
      */
-    void packExtension(ByteSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException;
+    void packExtension(InputSource zipBytes, KeyPair keyPair, OutputStream output) throws IOException, InvalidKeyException, NoSuchAlgorithmException, SignatureException;
 
     /**
      * Gets a default instance. This currently returns a packer that packs
