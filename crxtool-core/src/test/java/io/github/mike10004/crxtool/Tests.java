@@ -282,14 +282,12 @@ public class Tests {
                 long i = algoCount.getAndIncrement(proofContainer.algorithm());
                 out.format("proof: %s %s len=%s%n", proofContainer.algorithm(), i, proof.getCombinedLength());
             }
+            dumpZipInfo(in, out);
         }
     }
 
-    public static void dumpZipInfo(ByteSource zipByteSource, PrintStream out) throws IOException {
-        Unzippage unzippage;
-        try (InputStream in = zipByteSource.openStream()) {
-            unzippage = Unzippage.unzip(in);
-        }
+    public static void dumpZipInfo(InputStream crxStreamAtZipPosition, PrintStream out) throws IOException {
+        Unzippage unzippage = Unzippage.unzip(crxStreamAtZipPosition);
         List<String> zipEntries = Ordering.natural().immutableSortedCopy(unzippage.fileEntries());
         for (String zipEntry : zipEntries) {
             out.println(zipEntry);
