@@ -82,12 +82,12 @@ public interface CrxPacker {
 
     static CrxPacker getPackerInstance(CrxVersion version) {
         switch (version) {
-            case CRX2:
-                return Crx2Packer.getDefaultInstance();
             case CRX3:
                 return Crx3Packer.getDefaultInstance();
+            case CRX2:
+                throw new IllegalArgumentException("version 2 is no longer supported (as of crxtool 0.16)");
             default:
-                throw new IllegalArgumentException(String.format("only version 2 is supported, not %s", version));
+                throw new IllegalArgumentException(String.format("only version 3 is supported, not %s", version));
         }
     }
 
