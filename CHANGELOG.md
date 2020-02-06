@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.16
+----
+
+* remove support for packing extensions in CRX format version 2
+
 0.15
 ----
 
